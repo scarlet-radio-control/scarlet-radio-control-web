@@ -1,0 +1,23 @@
+<Project>
+
+	<PropertyGroup>
+		<ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<LangVersion>13</LangVersion>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+		<NoWarn>BC40000;BC40008;CS0612</NoWarn>
+		<Nullable>annotations</Nullable>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/scarlet-radio-control/scarlet-radio-control-server.git</RepositoryUrl>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<UseArtifactsOutput>true</UseArtifactsOutput>
+		<Version>2026.01.12.0</Version>
+		<WarningLevel>7</WarningLevel>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TF_BUILD)' == 'true'">
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	</PropertyGroup>
+
+</Project>

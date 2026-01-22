@@ -1,0 +1,10 @@
+{
+	"$schema": "https://json.schemastore.org/global",
+	"sdk": {
+		"rollForward": "latestMajor",
+		"version": "10.0.101"
+	},
+	"test": {
+		"runner": "Microsoft.Testing.Platform"
+	}
+}

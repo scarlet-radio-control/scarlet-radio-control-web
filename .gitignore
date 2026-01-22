@@ -1,0 +1,4 @@
+*.pubxml
+*.user
+.vs/
+/artifacts
