@@ -9,7 +9,7 @@
 		<Nullable>annotations</Nullable>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<RepositoryUrl>https://github.com/scarlet-radio-control/scarlet-radio-control-server.git</RepositoryUrl>
+		<RepositoryUrl>https://github.com/scarlet-radio-control/scarlet-radio-control-web.git</RepositoryUrl>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<UseArtifactsOutput>true</UseArtifactsOutput>
 		<Version>2026.01.12.0</Version>
