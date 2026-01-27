@@ -6,6 +6,9 @@ jobs:
     - uses: "actions/setup-dotnet@v5"
       with:
         global-json-file: "global.json"
+    - uses: "actions/setup-node@v6"
+      with:
+        node-version: "24"
     - run: "dotnet restore"
     - run: "dotnet build --no-restore"
     - run: "dotnet test --no-build --verbosity normal"
