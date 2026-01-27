@@ -14,5 +14,10 @@
   </Folder>
   <Folder Name="/src/">
     <File Path="src/Directory.Build.props" />
+    <Project Path="src/reactapp1.client/reactapp1.client.esproj">
+      <Build />
+      <Deploy />
+    </Project>
+    <Project Path="src/ReactApp1.Server/ReactApp1.Server.csproj" />
   </Folder>
 </Solution>
