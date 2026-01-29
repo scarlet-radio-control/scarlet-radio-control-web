@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<SpaProxyLaunchCommand>npm run start</SpaProxyLaunchCommand>
+		<SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
 		<SpaProxyServerUrl>http://localhost:5173</SpaProxyServerUrl>
 		<SpaRoot>..\ScarletRadioControl.Web.Frontend</SpaRoot>
 		<TargetFramework>net10.0</TargetFramework>
