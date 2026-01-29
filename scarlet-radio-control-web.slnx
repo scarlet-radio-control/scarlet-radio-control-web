@@ -14,7 +14,7 @@
   </Folder>
   <Folder Name="/src/">
     <File Path="src/Directory.Build.props" />
-    <Project Path="src/reactapp1.client/reactapp1.client.esproj">
+    <Project Path="src/ScarletRadioControl.Web.Frontend/ScarletRadioControl.Web.Frontend.esproj">
       <Build />
       <Deploy />
     </Project>
