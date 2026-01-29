@@ -18,6 +18,6 @@
       <Build />
       <Deploy />
     </Project>
-    <Project Path="src/ReactApp1.Server/ReactApp1.Server.csproj" />
+    <Project Path="src/ScarletRadioControl.Web/ScarletRadioControl.Web.csproj" />
   </Folder>
 </Solution>
