@@ -1,6 +1,6 @@
 jobs:
   build:
-    runs-on: ubuntu-24.04"
+    runs-on: "ubuntu-24.04"
     steps:
     - uses: "actions/checkout@v6"
     - uses: "actions/setup-dotnet@v5"
@@ -10,11 +10,12 @@ jobs:
       with:
         node-version: "24"
     - run: "dotnet restore"
-    - run: "dotnet build --no-restore"
-    - run: "dotnet test --no-build --verbosity normal"
+    - run: "dotnet build"
+    - run: "dotnet test"
+    - run: "dotnet publish"
 name: "main"
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "release" ]
   push:
-    branches: [ "main" ]
+    branches: [ "main", "release" ]
