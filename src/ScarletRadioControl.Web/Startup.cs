@@ -18,8 +18,6 @@ public class Startup(
 	public void Configure(IApplicationBuilder applicationBuilder)
 	{
 		applicationBuilder
-			.UseDefaultFiles();
-		applicationBuilder
 			.UseHttpsRedirection();
 		applicationBuilder
 			.UseRouting();
