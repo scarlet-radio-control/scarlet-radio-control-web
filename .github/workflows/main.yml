@@ -2,18 +2,35 @@ jobs:
   build:
     runs-on: "ubuntu-24.04"
     steps:
-    - uses: "actions/checkout@v6"
-    - uses: "actions/setup-dotnet@v5"
-      with:
-        global-json-file: "global.json"
-    - uses: "actions/setup-node@v6"
-      with:
-        node-version: "24"
-    - run: "dotnet restore"
-    - run: "dotnet build"
-    - run: "dotnet test"
-      if: false
-    - run: "dotnet publish"
+      - uses: "actions/checkout@v6"
+      - uses: "actions/setup-dotnet@v5"
+        with:
+          global-json-file: "global.json"
+      - uses: "actions/setup-node@v6"
+        with:
+          node-version: "24"
+      - run: "dotnet restore"
+      - run: "dotnet build"
+      - run: "dotnet test"
+        if: false
+      - run: "dotnet publish"
+      - uses: "actions/upload-artifact@v6"
+        with:
+          if-no-files-found: "error"
+          path: "publish" 
+  deploy:
+    if: "github.ref == 'refs/heads/main'"
+    needs: "build"
+    runs-on: "ubuntu-24.04"
+    steps:
+      - uses: "actions/download-artifact@v7"     
+        with:
+          path: "publish"
+      - uses: "azure/webapps-deploy@v3"    
+        with:
+          app-name: "${{ env.AZURE_WEBAPP_NAME }}"
+          package: "publish"
+          publish-profile: "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}"
 name: "main"
 on:
   pull_request:
