@@ -17,7 +17,7 @@ jobs:
       - uses: "actions/upload-artifact@v6"
         with:
           if-no-files-found: "error"
-          path: "publish" 
+          path: "./artifacts/publish/ScarletRadioControl.Web/release/" 
   deploy:
     if: "github.ref == 'refs/heads/main'"
     needs: "build"
