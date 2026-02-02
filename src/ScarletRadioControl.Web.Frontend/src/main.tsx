@@ -9,9 +9,7 @@ const root = createRoot(htmlElement)
 root.render(
 	<StrictMode>
 		<BrowserRouter>
-			<Routes>
-				<Route path="/" element={<App />} />
-			</Routes>
+			<App />
 		</BrowserRouter>
   </StrictMode>,
 )
