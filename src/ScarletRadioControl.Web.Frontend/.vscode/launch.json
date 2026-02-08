@@ -1,13 +1,13 @@
 {
-  "$schema": "vscode://schemas/launch",
-  "version": "0.2.0",
-  "configurations": [
-	{
-	  "name": "localhost (Edge)",
-	  "request": "launch",
-	  "type": "msedge",
-	  "url": "http://localhost:5173",
-	  "webRoot": "${workspaceFolder}"
-	}
-  ]
+	"$schema": "vscode://schemas/launch",
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "localhost (Edge)",
+			"request": "launch",
+			"type": "msedge",
+			"url": "http://localhost:5173",
+			"webRoot": "${workspaceFolder}"
+		}
+	]
 }
