@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
-		<SpaProxyServerUrl>http://localhost:5173</SpaProxyServerUrl>
+		<SpaProxyServerUrl>https://localhost:5173</SpaProxyServerUrl>
 		<SpaRoot>..\ScarletRadioControl.Web.Frontend</SpaRoot>
 		<TargetFramework>net10.0</TargetFramework>
 	</PropertyGroup>
