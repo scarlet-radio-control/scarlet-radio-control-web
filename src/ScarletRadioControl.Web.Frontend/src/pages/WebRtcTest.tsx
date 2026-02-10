@@ -16,12 +16,12 @@ export default function GamepadTest() {
 
 		try {
 			// 1) Get camera/mic
-			const stream = await navigator.mediaDevices.getUserMedia({
+			const mediaStream = await navigator.mediaDevices.getUserMedia({
 				video: true,
 				audio: true,
 			});
-	  		localStreamRef.current = stream;
-			if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+	  		localStreamRef.current = mediaStream;
+			if (localVideoRef.current){ localVideoRef.current.srcObject = mediaStream; }
 
 			// 2) Create two peer connections (loopback in same tab)
 			const pc1 = new RTCPeerConnection();
@@ -31,21 +31,21 @@ export default function GamepadTest() {
 
 			// 3) ICE candidate exchange
 			pc1.onicecandidate = (e) => {
-				if (e.candidate) pc2.addIceCandidate(e.candidate).catch(console.error);
+				if (e.candidate){ pc2.addIceCandidate(e.candidate).catch(console.error);}
 			};
 			pc2.onicecandidate = (e) => {
-				if (e.candidate) pc1.addIceCandidate(e.candidate).catch(console.error);
+				if (e.candidate) { pc1.addIceCandidate(e.candidate).catch(console.error); }
 			};
 
 			// 4) Remote track handling
-			pc2.ontrack = (e) => {
+			pc2.ontrack = (rtcTrackEvent) => {
 				// e.streams[0] is the remote MediaStream
-				if (remoteVideoRef.current) remoteVideoRef.current.srcObject = e.streams[0];
+				if (remoteVideoRef.current) {remoteVideoRef.current.srcObject = rtcTrackEvent.streams[0];}
 			};
 
 			// 5) Add local tracks to pc1
-			for (const track of stream.getTracks()) {
-				pc1.addTrack(track, stream);
+			for (const mediaStreamTrack of mediaStream.getTracks()) {
+				pc1.addTrack(mediaStreamTrack, mediaStream);
 			}
 
 			// 6) Offer/answer handshake
@@ -75,13 +75,13 @@ export default function GamepadTest() {
 
 		// Stop media tracks
 		if (localStreamRef.current) {
-			for (const t of localStreamRef.current.getTracks()) t.stop();
+			for (const t of localStreamRef.current.getTracks()) {t.stop();}
 			localStreamRef.current = null;
 		}
 
 		// Clear video elements
-		if (localVideoRef.current) localVideoRef.current.srcObject = null;
-		if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+		if (localVideoRef.current) {localVideoRef.current.srcObject = null;}
+		if (remoteVideoRef.current) {remoteVideoRef.current.srcObject = null;}
 
 		setStarted(false);
   	}
