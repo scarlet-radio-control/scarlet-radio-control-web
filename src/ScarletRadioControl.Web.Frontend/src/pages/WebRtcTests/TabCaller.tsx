@@ -1,4 +1,3 @@
-// Caller.tsx
 import { useEffect, useRef, useState } from "react";
 
 type SignalMessage =
