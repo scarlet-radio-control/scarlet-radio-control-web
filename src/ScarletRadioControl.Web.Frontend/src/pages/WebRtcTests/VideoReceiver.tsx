@@ -7,7 +7,6 @@ type SignalMessage =
   | { type: "reset" };
 
 export default function Callee() {
-  const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const [started, setStarted] = useState(false);
@@ -63,15 +62,9 @@ export default function Callee() {
       const ch = ensureChannel();
 
       setStatus("getting-media");
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      localStreamRef.current = stream;
-      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+
 
       const pc = await createPeerConnection();
-      for (const t of stream.getTracks()) pc.addTrack(t, stream);
 
       ch.onmessage = async (ev) => {
         const msg = ev.data as SignalMessage;
@@ -129,7 +122,6 @@ export default function Callee() {
       localStreamRef.current = null;
     }
 
-    if (localVideoRef.current) localVideoRef.current.srcObject = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
 
     setStarted(false);
@@ -152,18 +144,7 @@ export default function Callee() {
         <b>Status:</b> {status}
       </div>
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <div>
-          <div>Local</div>
-          <video
-            ref={localVideoRef}
-            autoPlay
-            playsInline
-            muted
-            style={{ width: 460, background: "#111" }}
-          />
-        </div>
-
+      <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
         <div>
           <div>Remote</div>
           <video
@@ -175,7 +156,7 @@ export default function Callee() {
         </div>
       </div>
 
-      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+      <div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
         <button onClick={start} disabled={started}>
           Start (wait for offer)
         </button>
