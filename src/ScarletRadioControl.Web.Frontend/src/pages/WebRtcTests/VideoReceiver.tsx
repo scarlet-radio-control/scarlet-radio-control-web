@@ -64,7 +64,7 @@ export default function Callee() {
       setStatus("getting-media");
 
 
-      const pc = await createPeerConnection();
+      await createPeerConnection();
 
       ch.onmessage = async (ev) => {
         const msg = ev.data as SignalMessage;
