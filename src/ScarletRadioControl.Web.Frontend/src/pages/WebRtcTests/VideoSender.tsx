@@ -9,14 +9,10 @@ type SignalMessage =
 
 export default function Caller() {
 
-
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const [started, setStarted] = useState(false);
-  const [status, setStatus] = useState<
-    "idle" | "getting-media" | "creating-offer" | "waiting-answer" | "connected"
-  >("idle");
+  const [status, setStatus] = useState<"idle" | "getting-media" | "creating-offer" | "waiting-answer" | "connected">("idle");
   const [error, setError] = useState("");
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -44,10 +40,6 @@ export default function Caller() {
 
     pc.onicecandidate = (e) => {
       if (e.candidate) post({ type: "ice", candidate: e.candidate.toJSON() });
-    };
-
-    pc.ontrack = (e) => {
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = e.streams[0];
     };
 
     pc.onconnectionstatechange = () => {
@@ -95,12 +87,7 @@ export default function Caller() {
       };
 
       setStatus("getting-media");
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      localStreamRef.current = stream;
-      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+      const stream = (localVideoRef.current! as any).captureStream();
 
       const pc = await createPeerConnection();
       for (const t of stream.getTracks()) pc.addTrack(t, stream);
@@ -132,7 +119,6 @@ export default function Caller() {
     }
 
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
 
     setStarted(false);
   }
@@ -159,7 +145,7 @@ export default function Caller() {
         <b>Status:</b> {status}
       </div>
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
         <div>
           <div>Local</div>
           <video
@@ -169,22 +155,12 @@ export default function Caller() {
             loop
             playsInline
             muted
-            style={{ width: 460, background: "#111" }}
-          />
-        </div>
-
-        <div>
-          <div>Remote</div>
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            style={{ width: 460, background: "#111" }}
+            style={{ width: 1080, background: "#111" }}
           />
         </div>
       </div>
 
-      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+      <div style={{ marginTop: 12, display: "flex",  justifyContent: "center" }}>
         <button onClick={start} disabled={started}>
           Start (create offer)
         </button>
