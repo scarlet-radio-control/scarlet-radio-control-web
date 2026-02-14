@@ -20,6 +20,8 @@ public class Startup(
 		applicationBuilder
 			.UseHttpsRedirection();
 		applicationBuilder
+			.UseExceptionHandler();
+		applicationBuilder
 			.UseRouting();
 		applicationBuilder
 			.UseAuthorization();
@@ -52,6 +54,8 @@ public class Startup(
 			.AddHealthChecks();
 		serviceCollection
 			.AddOpenApi();
+		serviceCollection
+			.AddProblemDetails();
 		serviceCollection
 			.ConfigureHttpJsonOptions(jsonOptions =>
 			{
