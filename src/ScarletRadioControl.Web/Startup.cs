@@ -24,11 +24,17 @@ public class Startup(
 		applicationBuilder
 			.UseAuthorization();
 		applicationBuilder
+			.UseSwaggerUI(swaggerUIOptions =>
+			{
+				swaggerUIOptions.SwaggerEndpoint("/openapi/v1.json", "v1");
+			});
+		applicationBuilder
 			.UseEndpoints(endpointRouteBuilder =>
 			{
 				endpointRouteBuilder.MapControllers();
-				endpointRouteBuilder.MapStaticAssets();
+				endpointRouteBuilder.MapHealthChecks("/health");
 				endpointRouteBuilder.MapOpenApi();
+				endpointRouteBuilder.MapStaticAssets();
 				endpointRouteBuilder.MapFallbackToFile("/index.html");
 			});
 	}
@@ -43,7 +49,15 @@ public class Startup(
 				jsonOptions.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict;
 			});
 		serviceCollection
+			.AddHealthChecks();
+		serviceCollection
 			.AddOpenApi();
+		serviceCollection
+			.ConfigureHttpJsonOptions(jsonOptions =>
+			{
+				jsonOptions.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+				jsonOptions.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+			});
 	}
 
 }
