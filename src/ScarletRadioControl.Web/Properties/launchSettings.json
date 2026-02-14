@@ -9,7 +9,8 @@
 				"ASPNETCORE_ENVIRONMENT": "Development",
 				"ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.SpaProxy"
 			},
-			"launchBrowser": false
+			"launchBrowser": true,
+			"launchUrl": "swagger"
 		}
 	}
 }
