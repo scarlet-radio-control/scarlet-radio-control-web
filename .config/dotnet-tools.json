@@ -1,0 +1,13 @@
+{
+	"$schema": "https://www.schemastore.org/dotnet-tools.json",
+	"isRoot": true,
+	"tools": {
+		"microsoft.openapi.kiota": {
+			"commands": [
+				"kiota"
+			],
+			"version": "1.30.0"
+		}
+	},
+	"version": 1
+}
