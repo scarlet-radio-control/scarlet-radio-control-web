@@ -1,5 +1,4 @@
-// Call.tsx (React + TypeScript, 1:1 WebRTC over SignalR signaling)
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   HubConnection,
   HubConnectionBuilder,
