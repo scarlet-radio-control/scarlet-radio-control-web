@@ -10,6 +10,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" />
+		<PackageReference Include="Microsoft.Extensions.ApiDescription.Server" IncludeAssets="runtime;build;native;contentfiles;analyzers;buildtransitive" PrivateAssets="all" />
 		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
 	</ItemGroup>
 
