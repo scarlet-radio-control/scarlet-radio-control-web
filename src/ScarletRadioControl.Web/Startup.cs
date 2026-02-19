@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ScarletRadioControl.Web.Hubs;
 
 namespace ScarletRadioControl.Web;
 
@@ -35,6 +36,7 @@ public class Startup(
 			{
 				endpointRouteBuilder.MapControllers();
 				endpointRouteBuilder.MapHealthChecks("/health");
+				endpointRouteBuilder.MapHub<WebRtcHub>("/hubs/web-rtc-hub");
 				endpointRouteBuilder.MapOpenApi();
 				endpointRouteBuilder.MapStaticAssets();
 				endpointRouteBuilder.MapFallbackToFile("/index.html");
@@ -56,6 +58,8 @@ public class Startup(
 			.AddOpenApi();
 		serviceCollection
 			.AddProblemDetails();
+		serviceCollection
+			.AddSignalR();
 		serviceCollection
 			.ConfigureHttpJsonOptions(jsonOptions =>
 			{

@@ -1,180 +1,233 @@
-import { useEffect, useRef, useState } from "react";
+// Call.tsx (React + TypeScript, 1:1 WebRTC over SignalR signaling)
+import React, { useEffect, useRef, useState } from "react";
+import {
+  HubConnection,
+  HubConnectionBuilder,
+  HubConnectionState,
+} from "@microsoft/signalr";
 
-type SignalMessage =
-  | { type: "offer"; sdp: RTCSessionDescriptionInit }
-  | { type: "answer"; sdp: RTCSessionDescriptionInit }
-  | { type: "ice"; candidate: RTCIceCandidateInit }
-  | { type: "reset" };
+type SignalOffer = RTCSessionDescriptionInit;
+type SignalAnswer = RTCSessionDescriptionInit;
+type SignalCandidate = RTCIceCandidateInit;
 
-export default function Callee() {
+const RTC_CONFIG: RTCConfiguration = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    // Production reliability usually requires TURN:
+    // { urls: "turn:your.turn.server:3478", username: "...", credential: "..." },
+  ],
+};
+
+type Props = { roomId: string };
+
+export default function SignalRVideoReceiver({ roomId }: Props) {
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
-  const [started, setStarted] = useState(false);
-  const [status, setStatus] = useState<
-    "idle" | "getting-media" | "waiting-offer" | "answering" | "connected"
-  >("idle");
-  const [error, setError] = useState("");
-
+  const connRef = useRef<HubConnection | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
+  const targetIdRef = useRef<string | null>(null);
+
+  const pendingCandidatesRef = useRef<SignalCandidate[]>([]);
   const localStreamRef = useRef<MediaStream | null>(null);
-  const channelRef = useRef<BroadcastChannel | null>(null);
 
-  const remoteDescSetRef = useRef(false);
-  const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
+  const [status, setStatus] = useState<
+    | "init"
+    | "connecting"
+    | "waiting"
+    | "offer-sent"
+    | "answer-sent"
+    | "connected"
+    | "error"
+  >("init");
 
-  function ensureChannel() {
-    if (!channelRef.current) {
-      channelRef.current = new BroadcastChannel("webrtc-demo");
-    }
-    return channelRef.current;
-  }
+  const ensurePeerConnection = async (): Promise<RTCPeerConnection> => {
+    if (pcRef.current) return pcRef.current;
 
-  function post(msg: SignalMessage) {
-    ensureChannel().postMessage(msg);
-  }
+    const pc = new RTCPeerConnection(RTC_CONFIG);
 
-  async function createPeerConnection() {
-    const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-    });
+    pc.onicecandidate = async (e: RTCPeerConnectionIceEvent) => {
+      if (!e.candidate) return;
+      const conn = connRef.current;
+      const targetId = targetIdRef.current;
+      if (!conn || conn.state !== HubConnectionState.Connected || !targetId) return;
 
-    pc.onicecandidate = (e) => {
-      if (e.candidate) post({ type: "ice", candidate: e.candidate.toJSON() });
+      // Send ICE candidates as they’re found
+      await conn.invoke("SendIceCandidate", roomId, targetId, e.candidate.toJSON());
     };
 
-    pc.ontrack = (e) => {
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = e.streams[0];
-    };
-
-    pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "connected") setStatus("connected");
+    pc.ontrack = (e: RTCTrackEvent) => {
+      const [remoteStream] = e.streams;
+      if (remoteVideoRef.current && remoteStream) {
+        remoteVideoRef.current.srcObject = remoteStream;
+      }
     };
 
     pcRef.current = pc;
     return pc;
-  }
+  };
 
-  async function start() {
-    setError("");
-    if (started) return;
+  const ensureLocalMedia = async (pc: RTCPeerConnection): Promise<MediaStream> => {
+    if (localStreamRef.current) return localStreamRef.current;
 
-    try {
-      const ch = ensureChannel();
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
+    });
 
-      setStatus("getting-media");
+    localStreamRef.current = stream;
 
+    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
-      await createPeerConnection();
-
-      ch.onmessage = async (ev) => {
-        const msg = ev.data as SignalMessage;
-        const pc = pcRef.current;
-        if (!pc) return;
-
-        try {
-          if (msg.type === "offer") {
-            setStatus("answering");
-            await pc.setRemoteDescription(msg.sdp);
-            remoteDescSetRef.current = true;
-
-            for (const c of pendingIceRef.current) await pc.addIceCandidate(c);
-            pendingIceRef.current = [];
-
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            post({ type: "answer", sdp: answer });
-
-            setStatus("connected");
-          }
-
-          if (msg.type === "ice") {
-            if (remoteDescSetRef.current) {
-              await pc.addIceCandidate(msg.candidate);
-            } else {
-              pendingIceRef.current.push(msg.candidate);
-            }
-          }
-
-          if (msg.type === "reset") stop();
-        } catch (e: any) {
-          setError(e?.message || String(e));
-        }
-      };
-
-      setStatus("waiting-offer");
-      setStarted(true);
-    } catch (e: any) {
-      setError(e?.message || String(e));
-    }
-  }
-
-  function stop() {
-    remoteDescSetRef.current = false;
-    pendingIceRef.current = [];
-    setStatus("idle");
-    setError("");
-
-    pcRef.current?.close();
-    pcRef.current = null;
-
-    if (localStreamRef.current) {
-      for (const t of localStreamRef.current.getTracks()) t.stop();
-      localStreamRef.current = null;
+    for (const track of stream.getTracks()) {
+      pc.addTrack(track, stream);
     }
 
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    return stream;
+  };
 
-    setStarted(false);
-  }
+  const flushPendingCandidates = async (): Promise<void> => {
+    const pc = pcRef.current;
+    if (!pc?.remoteDescription) return;
+
+    const queued = pendingCandidatesRef.current;
+    pendingCandidatesRef.current = [];
+
+    for (const c of queued) {
+      // addIceCandidate accepts RTCIceCandidateInit
+      await pc.addIceCandidate(c);
+    }
+  };
 
   useEffect(() => {
-    return () => {
-      channelRef.current?.close();
-      channelRef.current = null;
-      stop();
+    let stopped = false;
+
+    const run = async () => {
+      setStatus("connecting");
+
+      const conn = new HubConnectionBuilder()
+        .withUrl("/hubs/web-rtc-hub") // adjust as needed
+        .withAutomaticReconnect()
+        .build();
+
+      connRef.current = conn;
+
+      // Someone joined the room; we become caller and send an offer to them.
+      conn.on("PeerJoined", async (peerConnectionId: string) => {
+        if (stopped) return;
+
+        targetIdRef.current = peerConnectionId;
+
+        const pc = await ensurePeerConnection();
+        await ensureLocalMedia(pc);
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        await conn.invoke("SendOffer", roomId, peerConnectionId, offer);
+        setStatus("offer-sent");
+      });
+
+      // We received an offer; we are callee, send answer.
+      conn.on(
+        "ReceiveOffer",
+        async (fromConnectionId: string, offer: SignalOffer) => {
+          if (stopped) return;
+
+          targetIdRef.current = fromConnectionId;
+
+          const pc = await ensurePeerConnection();
+          await ensureLocalMedia(pc);
+
+          await pc.setRemoteDescription(offer);
+
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+
+          await conn.invoke("SendAnswer", roomId, fromConnectionId, answer);
+
+          await flushPendingCandidates();
+          setStatus("answer-sent");
+        }
+      );
+
+      // We received an answer; finalize connection.
+      conn.on(
+        "ReceiveAnswer",
+        async (_fromConnectionId: string, answer: SignalAnswer) => {
+          if (stopped) return;
+
+          const pc = pcRef.current;
+          if (!pc) return;
+
+          await pc.setRemoteDescription(answer);
+          await flushPendingCandidates();
+          setStatus("connected");
+        }
+      );
+
+      // We received an ICE candidate.
+      conn.on(
+        "ReceiveIceCandidate",
+        async (_fromConnectionId: string, candidate: SignalCandidate) => {
+          if (stopped) return;
+
+          const pc = pcRef.current ?? (await ensurePeerConnection());
+
+          // If remoteDescription isn't set yet, queue candidates.
+          if (!pc.remoteDescription) {
+            pendingCandidatesRef.current.push(candidate);
+            return;
+          }
+
+          await pc.addIceCandidate(candidate);
+        }
+      );
+
+      await conn.start();
+      await conn.invoke("JoinRoom", roomId);
+
+      setStatus("waiting");
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    run().catch((e) => {
+      console.error(e);
+      setStatus("error");
+    });
+
+    return () => {
+      stopped = true;
+
+      // Stop SignalR
+      try {
+        connRef.current?.stop();
+      } catch {}
+
+      // Close RTCPeerConnection
+      try {
+        pcRef.current?.close();
+      } catch {}
+
+      // Stop local tracks (camera/mic)
+      try {
+        localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      } catch {}
+
+      connRef.current = null;
+      pcRef.current = null;
+      localStreamRef.current = null;
+      targetIdRef.current = null;
+      pendingCandidatesRef.current = [];
+    };
+  }, [roomId]);
 
   return (
-    <div style={{ fontFamily: "system-ui", padding: 16, maxWidth: 980 }}>
-      <h2>Callee</h2>
-
-      <div style={{ marginBottom: 12 }}>
-        <b>Status:</b> {status}
+    <div>
+      <div>Status: {status}</div>
+      <div style={{ display: "flex", gap: 12 }}>
+        <video ref={localVideoRef} autoPlay playsInline muted style={{ width: 320 }} />
+        <video ref={remoteVideoRef} autoPlay playsInline style={{ width: 320 }} />
       </div>
-
-      <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
-        <div>
-          <div>Remote</div>
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            style={{ width: 460, background: "#111" }}
-          />
-        </div>
-      </div>
-
-      <div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
-        <button onClick={start} disabled={started}>
-          Start (wait for offer)
-        </button>
-        <button onClick={stop} disabled={!started}>
-          Stop (this tab)
-        </button>
-      </div>
-
-      {error && (
-        <pre style={{ marginTop: 12, color: "crimson", whiteSpace: "pre-wrap" }}>
-          {error}
-        </pre>
-      )}
-
-      <p style={{ marginTop: 12, color: "#444" }}>
-        Start this tab, then start Caller in another tab (same origin). Callee will
-        answer when it receives the offer.
-      </p>
     </div>
   );
 }

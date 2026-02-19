@@ -17,8 +17,8 @@ export default function App() {
 			<Route path="/web-rtc-tests/basic" element={<Basic />} />
 			<Route path="/web-rtc-tests/tab-callee" element={<TabCallee />} />
 			<Route path="/web-rtc-tests/tab-caller" element={<TabCaller />} />
-			<Route path="/web-rtc-tests/signalr-video-receiver" element={<SignalRVideoReceiver />} />
-			<Route path="/web-rtc-tests/signalr-video-sender" element={<SignalRVideoSender />} />
+			<Route path="/web-rtc-tests/signalr-video-receiver" element={<SignalRVideoReceiver roomId="test-room" />} />
+			<Route path="/web-rtc-tests/signalr-video-sender" element={<SignalRVideoSender roomId="test-room" />} />
 			<Route path="/web-rtc-tests/video-receiver" element={<VideoReceiver />} />
 			<Route path="/web-rtc-tests/video-sender" element={<VideoSender />} />
 		</Routes>

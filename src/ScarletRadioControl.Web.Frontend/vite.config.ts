@@ -26,4 +26,14 @@ export default defineConfig({
 		}
 		*/
 	],
+	server: {
+		proxy: {
+			"/hubs": {
+				changeOrigin: true,
+				secure: false,
+				target: "https://localhost:7001",
+				ws: true,
+			}
+		}
+	}
 })
