@@ -1,11 +1,11 @@
-import { Routes, Route } from 'react-router-dom'
-import GamepadTest from './pages/GamepadTest.tsx'
-import Index from './pages/Index.tsx'
-import Basic from './pages/WebRtcTests/Basic.tsx'
-import TabCallee from './pages/WebRtcTests/TabCallee.tsx'
-import TabCaller from './pages/WebRtcTests/TabCaller.tsx'
-import VideoReceiver from './pages/WebRtcTests/VideoReceiver.tsx'
-import VideoSender from './pages/WebRtcTests/VideoSender.tsx'
+import { Routes, Route } from "react-router-dom"
+import GamepadTest from "./pages/GamepadTest.tsx"
+import Index from "./pages/Index.tsx"
+import Basic from "./pages/WebRtcTests/Basic.tsx"
+import TabCallee from "./pages/WebRtcTests/TabCallee.tsx"
+import TabCaller from "./pages/WebRtcTests/TabCaller.tsx"
+import VideoReceiver from "./pages/WebRtcTests/VideoReceiver.tsx"
+import VideoSender from "./pages/WebRtcTests/VideoSender.tsx"
 
 export default function App() {
 	return (
