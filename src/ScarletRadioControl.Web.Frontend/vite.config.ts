@@ -19,7 +19,7 @@ export default defineConfig({
 				updateClients({
 					cleanOutput: true,
 					clearCache: true,
-					workspacePath: "."
+					workspacePath: "./src/kiota/output/"
 				});
 			},
 			name: "kiota"
