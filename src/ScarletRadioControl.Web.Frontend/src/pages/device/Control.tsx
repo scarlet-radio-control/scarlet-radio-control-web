@@ -13,7 +13,7 @@ export default function Control() {
 
             <section>
                 <h2>Remote Stream</h2>
-                <video autoPlay playsInline ref={remoteVideoRef} style={{ width: "320px", height: "240px", background: "#000" }} />
+                <video autoPlay playsInline ref={remoteVideoRef} style={{ background: "#000", height: "auto", width: "100%" }} />
             </section>
 
             <p>(WebRTC connection logic to hook streams into the videos goes here.)</p>
