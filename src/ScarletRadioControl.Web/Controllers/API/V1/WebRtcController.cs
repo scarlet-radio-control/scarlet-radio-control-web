@@ -22,14 +22,59 @@ public class WebRtcController : ControllerBase
 		{
 			IceServers = new List<RTCIceServer>
 			{
+				//new RTCIceServer
+				//{
+				//	Credential = null,
+				//	Urls = new List<string>
+				//	{
+				//		"stun:stun.l.google.com:19302"
+				//	},
+				//	Username = null
+				//},
 				new RTCIceServer
 				{
 					Credential = null,
 					Urls = new List<string>
 					{
-						"stun:stun.l.google.com:19302"
+						"stun:stun.relay.metered.ca:80"
 					},
 					Username = null
+				},
+				new RTCIceServer
+				{
+					Credential = "xkw2mfGQr0ZAODKl",
+					Urls = new List<string>
+					{
+						"turn:global.relay.metered.ca:80"
+					},
+					Username = "b6e796d3b6bc333d4bf58b84"
+				},
+				new RTCIceServer
+				{
+					Credential = "xkw2mfGQr0ZAODKl",
+					Urls = new List<string>
+					{
+						"turn:global.relay.metered.ca:80?transport=tcp"
+					},
+					Username = "b6e796d3b6bc333d4bf58b84"
+				},
+				new RTCIceServer
+				{
+					Credential = "xkw2mfGQr0ZAODKl",
+					Urls = new List<string>
+					{
+						"turn:global.relay.metered.ca:443"
+					},
+					Username = "b6e796d3b6bc333d4bf58b84"
+				},
+				new RTCIceServer
+				{
+					Credential = "xkw2mfGQr0ZAODKl",
+					Urls = new List<string>
+					{
+						"turns:global.relay.metered.ca:443?transport=tcp"
+					},
+					Username = "b6e796d3b6bc333d4bf58b84"
 				}
 			}
 		};
