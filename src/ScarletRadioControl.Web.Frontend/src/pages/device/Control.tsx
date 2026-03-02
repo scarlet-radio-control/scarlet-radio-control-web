@@ -8,13 +8,8 @@ export default function Control() {
 
     return (
         <div style={{ width: "100%" }}>
-            <p>Id: {id}</p>
-            <video autoPlay playsInline ref={remoteVideoRef} style={{ background: "#000", height: "auto", width: "100%" }} />
-            <section>
-                <h2>Remote Stream</h2>
-            </section>
-
-            <p>(WebRTC connection logic to hook streams into the videos goes here.)</p>
+            <p style={{ margin: "auto 1rem" }}>Id: {id} - Status: {"unknown"} - RTC Mode: {"unknown"}</p>
+            <video autoPlay playsInline ref={remoteVideoRef} style={{ background: "#000000", width: "100%" }} />
         </div>
     );
 }
