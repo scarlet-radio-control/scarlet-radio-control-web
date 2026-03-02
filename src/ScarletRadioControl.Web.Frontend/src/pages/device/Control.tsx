@@ -7,9 +7,9 @@ export default function Control() {
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
     return (
-        <div style={{ width: "100%" }}>
+        <div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
             <p style={{ margin: "auto 1rem" }}>Id: {id} - Status: {"unknown"} - RTC Mode: {"unknown"}</p>
-            <video autoPlay playsInline ref={remoteVideoRef} style={{ background: "#000000", width: "100%" }} />
+            <video autoPlay playsInline ref={remoteVideoRef} style={{ backgroundColor: "#000000", height: "100%", width: "100%" }} />
         </div>
     );
 }
