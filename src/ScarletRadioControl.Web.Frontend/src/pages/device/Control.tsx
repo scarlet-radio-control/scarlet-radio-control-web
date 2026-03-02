@@ -7,7 +7,7 @@ export default function Control() {
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
     return (
-        <div>
+        <div style={{ width: "100%" }}>
             <p>Id: {id}</p>
             <video autoPlay playsInline ref={remoteVideoRef} style={{ background: "#000", height: "auto", width: "100%" }} />
             <section>
