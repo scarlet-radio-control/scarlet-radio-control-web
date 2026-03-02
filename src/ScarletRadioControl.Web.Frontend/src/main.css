@@ -30,6 +30,8 @@ body {
   place-items: center;
   min-width: 100vw;
   min-height: 100vh;
+  text-align: center;
+  margin: 0 auto;
 }
 
 h1 {

@@ -8,12 +8,10 @@ export default function Control() {
 
     return (
         <div>
-            <h1>Device Control</h1>
-            <p>Controlling device with ID: {id}</p>
-
+            <p>Id: {id}</p>
+            <video autoPlay playsInline ref={remoteVideoRef} style={{ background: "#000", height: "auto", width: "100%" }} />
             <section>
                 <h2>Remote Stream</h2>
-                <video autoPlay playsInline ref={remoteVideoRef} style={{ background: "#000", height: "auto", width: "100%" }} />
             </section>
 
             <p>(WebRTC connection logic to hook streams into the videos goes here.)</p>
