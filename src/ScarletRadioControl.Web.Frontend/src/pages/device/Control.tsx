@@ -60,7 +60,13 @@ export default function Control() {
             .withAutomaticReconnect()
             .build();
 
-            hubConnectionRefObject.current.on("PeerJoined", async (connectionId: string) => { });
+            hubConnectionRefObject.current.on("PeerJoined", async (connectionId: string) => { 
+                /* Other Side called "PeerJoined" */
+
+                rtcPeerConnectionRefObject.current = new RTCPeerConnection(RTC_CONFIG);
+                rtcPeerConnectionRefObject.current.onicecandidate = async (rtcPeerConnectionIceEvent) => {};
+                rtcPeerConnectionRefObject.current.ontrack = async (rtcPeerConnectionTrackEvent) => {};
+            });
 
             hubConnectionRefObject.current.on("ReceiveAnswer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => { });
 
