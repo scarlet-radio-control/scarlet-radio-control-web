@@ -47,7 +47,7 @@ export default function Control() {
             });
 
         return () => {
-            			try {
+            try {
 				hubConnectionRefObject.current?.stop();
                 hubConnectionRefObject.current = null;
 			} catch { }
