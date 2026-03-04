@@ -31,7 +31,7 @@ const RTC_CONFIG: RTCConfiguration = {
 };
 
 export default function Control() {
-    const { id } = useParams<{id: string}>();
+    const { deviceId } = useParams<{deviceId: string}>();
 
     const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
     const hubConnectionRefObject = useRef<HubConnection>(null);
@@ -56,7 +56,7 @@ export default function Control() {
                 hubConnectionRefObject.current = null;
 			} catch { }
         };
-    }, [id]);
+    }, [deviceId]);
 
     const startHubConnection = async () => {
         hubConnectionRefObject.current = new HubConnectionBuilder()				
@@ -68,8 +68,17 @@ export default function Control() {
                 /* Other Side called "PeerJoined" */
 
                 rtcPeerConnectionRefObject.current = new RTCPeerConnection(RTC_CONFIG);
-                rtcPeerConnectionRefObject.current.onicecandidate = async (rtcPeerConnectionIceEvent) => {};
-                rtcPeerConnectionRefObject.current.ontrack = async (rtcPeerConnectionTrackEvent) => {};
+                rtcPeerConnectionRefObject.current.onicecandidate = async (rtcPeerConnectionIceEvent) => {
+                    console.log(rtcPeerConnectionIceEvent);
+                };
+                rtcPeerConnectionRefObject.current.ontrack = async (rtcPeerConnectionTrackEvent) => {
+                    console.log(rtcPeerConnectionTrackEvent);       
+                };
+
+                const rtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current.createOffer();
+                await rtcPeerConnectionRefObject.current.setLocalDescription(rtcSessionDescriptionInit);
+                await hubConnectionRefObject.current.invoke("SendOffer", deviceId, connectionId, rtcSessionDescriptionInit);
+                console.log(rtcSessionDescriptionInit);
             });
 
             hubConnectionRefObject.current.on("ReceiveAnswer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => { });
@@ -79,13 +88,13 @@ export default function Control() {
             hubConnectionRefObject.current.on("ReceiveOffer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => { });
 
             await hubConnectionRefObject.current.start();
-            await hubConnectionRefObject.current.invoke("JoinRoom", id);
+            await hubConnectionRefObject.current.invoke("JoinRoom", deviceId);
             setStatus("signalr-connected");
     };
 
     return (
         <div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
-            <p style={{ margin: "auto 1rem" }}>Id: {id} - Status: {status} - RTC Mode: {"unknown"}</p>
+            <p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - RTC Mode: {"unknown"}</p>
             <video autoPlay playsInline ref={htmlVideoElementRefObject} style={{ backgroundColor: "#000000", height: "100%", width: "100%" }} />
         </div>
     );

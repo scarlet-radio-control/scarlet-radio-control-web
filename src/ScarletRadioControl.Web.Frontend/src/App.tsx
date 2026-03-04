@@ -14,7 +14,7 @@ export default function App() {
 	return (
 		<Routes>
 			<Route path="/" element={<Index />} />
-			<Route path="/device/:id/control" element={<Control />} />
+			<Route path="/device/:deviceId/control" element={<Control />} />
 			<Route path="/gamepad-test" element={<GamepadTest />} />
 			<Route path="/web-rtc-tests/basic" element={<Basic />} />
 			<Route path="/web-rtc-tests/tab-callee" element={<TabCallee />} />
