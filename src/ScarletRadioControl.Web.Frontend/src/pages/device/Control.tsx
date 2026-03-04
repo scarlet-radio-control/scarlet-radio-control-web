@@ -48,6 +48,10 @@ export default function Control() {
 
         return () => {
             try {
+                rtcPeerConnectionRefObject.current?.close();
+                rtcPeerConnectionRefObject.current = null;
+            } catch { }
+            try {
 				hubConnectionRefObject.current?.stop();
                 hubConnectionRefObject.current = null;
 			} catch { }
