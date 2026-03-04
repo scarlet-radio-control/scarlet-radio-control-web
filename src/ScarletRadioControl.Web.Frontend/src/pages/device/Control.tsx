@@ -35,9 +35,10 @@ export default function Control() {
 
     const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
     const hubConnectionRefObject = useRef<HubConnection>(null);
+    const rtcIceCandiateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
     const rtcPeerConnectionRefObject = useRef<RTCPeerConnection>(null);
 
-    const [status, setStatus] = useState<"undefined" | "signalr-connected" | "signalr-error">("undefined");
+    const [status, setStatus] = useState<"undefined" | "signalr-connected" | "signalr-error" | "offer-sent" | "connected">("undefined");
 
     useEffect(() => {
         startHubConnection()
@@ -65,7 +66,8 @@ export default function Control() {
             .build();
 
             hubConnectionRefObject.current.on("PeerJoined", async (connectionId: string) => { 
-                /* Other Side called "PeerJoined" */
+                /* Other Side called "JoinRoom" */
+                console.log("PeerJoined", connectionId);
 
                 rtcPeerConnectionRefObject.current = new RTCPeerConnection(RTC_CONFIG);
                 rtcPeerConnectionRefObject.current.onicecandidate = async (rtcPeerConnectionIceEvent) => {
@@ -77,15 +79,34 @@ export default function Control() {
 
                 const rtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current.createOffer();
                 await rtcPeerConnectionRefObject.current.setLocalDescription(rtcSessionDescriptionInit);
-                await hubConnectionRefObject.current.invoke("SendOffer", deviceId, connectionId, rtcSessionDescriptionInit);
-                console.log(rtcSessionDescriptionInit);
+                await hubConnectionRefObject.current!.invoke("SendOffer", deviceId, connectionId, rtcSessionDescriptionInit);
+				setStatus("offer-sent");
             });
 
-            hubConnectionRefObject.current.on("ReceiveAnswer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => { });
+            hubConnectionRefObject.current.on("ReceiveAnswer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => { 
+                /* Other Side called "SendAnswer" */
+                console.log("ReceiveAnswer", connectionId, rtcSessionDescriptionInit);
 
-            hubConnectionRefObject.current.on("ReceiveCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => { });
+                await rtcPeerConnectionRefObject.current!.setRemoteDescription(rtcSessionDescriptionInit);
 
-            hubConnectionRefObject.current.on("ReceiveOffer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => { });
+                setStatus("connected");
+            });
+
+            hubConnectionRefObject.current.on("ReceiveIceCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => { 
+                /* Other Side called "SendOffer" */
+                console.log("ReceiveIceCandidate", connectionId, rtcIceCandidateInit);
+
+                if (rtcPeerConnectionRefObject.current!.remoteDescription !== null) {
+                    rtcPeerConnectionRefObject.current!.addIceCandidate(rtcIceCandidateInit);
+                } else {
+                    rtcIceCandiateInitsRefObject.current.push(rtcIceCandidateInit);
+                }
+            });
+
+            hubConnectionRefObject.current.on("ReceiveOffer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => { 
+                /* Other Side called "SendIceCandidate" */
+                console.log("ReceiveOffer", connectionId, rtcSessionDescriptionInit);
+            });
 
             await hubConnectionRefObject.current.start();
             await hubConnectionRefObject.current.invoke("JoinRoom", deviceId);
