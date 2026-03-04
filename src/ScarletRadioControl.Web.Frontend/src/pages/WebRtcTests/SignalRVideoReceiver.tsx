@@ -210,6 +210,7 @@ export default function SignalRVideoReceiver({ roomId }: Props) {
 		};
 
 		run().catch((e) => {
+			
 			console.error(e);
 			setStatus("error");
 		});

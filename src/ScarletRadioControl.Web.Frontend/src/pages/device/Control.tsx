@@ -1,5 +1,5 @@
-import type { HubConnection } from "@microsoft/signalr";
-import { useEffect, useRef } from "react";
+import { HubConnectionBuilder, type HubConnection } from "@microsoft/signalr";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const RTC_CONFIG: RTCConfiguration = {
@@ -33,19 +33,42 @@ const RTC_CONFIG: RTCConfiguration = {
 export default function Control() {
     const { id } = useParams<{id: string}>();
 
-    const htmlVideoElement = useRef<HTMLVideoElement>(null);
-    const hubConnection = useRef<HubConnection>(null);
-    const rtcPeerConnection = useRef<RTCPeerConnection>(null);
+    const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
+    const hubConnectionRefObject = useRef<HubConnection>(null);
+    const rtcPeerConnectionRefObject = useRef<RTCPeerConnection>(null);
+
+    const [status, setStatus] = useState<"undefined" | "signalr-connected" | "signalr-error">("undefined");
 
     useEffect(() => {
+        startHubConnection()
+            .catch((reason) => {
+                console.error(reason);
+                setStatus("signalr-error")
+            });
 
-        return () => {};
+        return () => {
+            			try {
+				hubConnectionRefObject.current?.stop();
+                hubConnectionRefObject.current = null;
+			} catch { }
+        };
     }, [id]);
+
+    const startHubConnection = async () => {
+        hubConnectionRefObject.current = new HubConnectionBuilder()				
+            .withUrl("/hubs/web-rtc-hub")
+            .withAutomaticReconnect()
+            .build();
+
+            await hubConnectionRefObject.current.start();
+            await hubConnectionRefObject.current.invoke("JoinRoom", id);
+            setStatus("signalr-connected");
+    };
 
     return (
         <div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
-            <p style={{ margin: "auto 1rem" }}>Id: {id} - Status: {"unknown"} - RTC Mode: {"unknown"}</p>
-            <video autoPlay playsInline ref={htmlVideoElement} style={{ backgroundColor: "#000000", height: "100%", width: "100%" }} />
+            <p style={{ margin: "auto 1rem" }}>Id: {id} - Status: {status} - RTC Mode: {"unknown"}</p>
+            <video autoPlay playsInline ref={htmlVideoElementRefObject} style={{ backgroundColor: "#000000", height: "100%", width: "100%" }} />
         </div>
     );
 }
