@@ -1,6 +1,7 @@
 import { HubConnectionBuilder, type HubConnection } from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
 
 const RTC_CONFIG: RTCConfiguration = {
 	iceServers: [
@@ -36,7 +37,7 @@ export default function Control() {
     const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
     const hubConnectionRefObject = useRef<HubConnection>(null);
     const rtcIceCandiateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
-    const rtcPeerConnectionRefObject = useRef<RTCPeerConnection>(null);
+    const rtcPeerConnectionRefObject = useRtcPeerConnection(RTC_CONFIG);
 
     const [status, setStatus] = useState<"undefined" | "signalr-connected" | "signalr-error" | "offer-sent" | "connected">("undefined");
 
