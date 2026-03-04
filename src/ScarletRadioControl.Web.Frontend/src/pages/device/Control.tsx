@@ -60,6 +60,14 @@ export default function Control() {
             .withAutomaticReconnect()
             .build();
 
+            hubConnectionRefObject.current.on("PeerJoined", async (connectionId: string) => { });
+
+            hubConnectionRefObject.current.on("ReceiveAnswer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => { });
+
+            hubConnectionRefObject.current.on("ReceiveCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => { });
+
+            hubConnectionRefObject.current.on("ReceiveOffer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => { });
+
             await hubConnectionRefObject.current.start();
             await hubConnectionRefObject.current.invoke("JoinRoom", id);
             setStatus("signalr-connected");
