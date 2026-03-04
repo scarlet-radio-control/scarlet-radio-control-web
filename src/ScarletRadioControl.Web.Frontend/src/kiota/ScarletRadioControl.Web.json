@@ -1,0 +1,131 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "ScarletRadioControl.Web | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/stun/rtc-configuration": {
+      "get": {
+        "tags": [
+          "WebRtc"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RTCConfiguration"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RTCConfiguration": {
+        "required": [
+          "iceServers"
+        ],
+        "type": "object",
+        "properties": {
+          "iceServers": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/RTCIceServer"
+            }
+          }
+        }
+      },
+      "RTCIceServer": {
+        "required": [
+          "credential",
+          "urls",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "credential": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "urls": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "username": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "WebRtc"
+    }
+  ]
+}

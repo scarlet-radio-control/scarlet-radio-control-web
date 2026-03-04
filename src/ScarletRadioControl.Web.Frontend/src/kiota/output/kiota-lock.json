@@ -1,6 +1,6 @@
 {
   "descriptionHash": "64A3FAB7ECA28355474E932B3238A53F2406B64927A87CC032F4373644E4B1D7FFABAD5070B656745745EBA1CCEF474902DADFBB4F2F21551673C8DFA7CD7C8E",
-  "descriptionLocation": "../../../../../artifacts/obj/ScarletRadioControl.Web/ScarletRadioControl.Web.json",
+  "descriptionLocation": "../ScarletRadioControl.Web.json",
   "lockFileVersion": "1.0.0",
   "kiotaVersion": "1.30.0",
   "clientClassName": "ApiClient",
