@@ -56,7 +56,7 @@ export default function Control() {
                 rtcPeerConnectionRefObject.current = null;
             } catch { }
             try {
-				hubConnectionRefObject.current?.stop();
+				hubConnectionRefObject.current?.stop().then(() => {});;
                 hubConnectionRefObject.current = null;
 			} catch { }
         };
@@ -72,16 +72,20 @@ export default function Control() {
                 /* Other Side called "JoinRoom" */
                 console.log("PeerJoined", connectionId);
 
-                rtcPeerConnectionRefObject.current = new RTCPeerConnection(RTC_CONFIG);
-                rtcPeerConnectionRefObject.current.onicecandidate = async (rtcPeerConnectionIceEvent) => {
+                rtcPeerConnectionRefObject.current!.onicecandidate = async (rtcPeerConnectionIceEvent) => {
                     console.log(rtcPeerConnectionIceEvent);
                 };
-                rtcPeerConnectionRefObject.current.ontrack = async (rtcPeerConnectionTrackEvent) => {
+                rtcPeerConnectionRefObject.current!.ontrack = async (rtcPeerConnectionTrackEvent) => {
                     console.log(rtcPeerConnectionTrackEvent);       
+
+                    const mediaStream = rtcPeerConnectionTrackEvent.streams[0];
+                    if(htmlVideoElementRefObject.current !== null && mediaStream !== null) {
+                        htmlVideoElementRefObject.current.srcObject = mediaStream;
+                    }
                 };
 
-                const rtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current.createOffer();
-                await rtcPeerConnectionRefObject.current.setLocalDescription(rtcSessionDescriptionInit);
+                const rtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current!.createOffer();
+                await rtcPeerConnectionRefObject.current!.setLocalDescription(rtcSessionDescriptionInit);
                 await hubConnectionRefObject.current!.invoke("SendOffer", deviceId, connectionId, rtcSessionDescriptionInit);
 				setStatus("offer-sent");
             });
