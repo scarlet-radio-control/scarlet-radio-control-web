@@ -32,7 +32,8 @@
 	"private": true,
 	"scripts": {
 		"build": "tsc -b && vite build",
-		"lint": "eslint .",
+		"lint": "eslint ./",
+		"lint:fix": "eslint ./ --fix",
 		"preview": "vite preview",
 		"start": "vite"
 	},
