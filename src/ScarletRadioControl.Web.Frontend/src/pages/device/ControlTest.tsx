@@ -138,48 +138,6 @@ export default function ControlTest() {
   }, []);
 
   return (
-    <div style={{ fontFamily: "system-ui", padding: 16, maxWidth: 980 }}>
-      <h2>Caller</h2>
-
-      <div style={{ marginBottom: 12 }}>
-        <b>Status:</b> {status}
-      </div>
-
-      <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
-        <div>
-          <div>Local</div>
-          <video
-            src={countdown}
-            ref={localVideoRef}
-            autoPlay
-            loop
-            playsInline
-            muted
-            style={{ width: 1080, background: "#111" }}
-          />
-        </div>
-      </div>
-
-      <div style={{ marginTop: 12, display: "flex",  justifyContent: "center" }}>
-        <button onClick={start} disabled={started}>
-          Start (create offer)
-        </button>
-        <button onClick={stop} disabled={!started}>
-          Stop (this tab)
-        </button>
-        <button onClick={resetBothTabs}>Reset (both tabs)</button>
-      </div>
-
-      {error && (
-        <pre style={{ marginTop: 12, color: "crimson", whiteSpace: "pre-wrap" }}>
-          {error}
-        </pre>
-      )}
-
-      <p style={{ marginTop: 12, color: "#444" }}>
-        Open Callee in another tab (same origin). Start Callee first or after—either
-        is fine. Caller sends the offer when started.
-      </p>
-    </div>
+    <video autoPlay loop muted playsInline ref={localVideoRef} src={countdown} style={{height: "80vh", margin: "auto", width: "80vw"}} />
   );
 }
