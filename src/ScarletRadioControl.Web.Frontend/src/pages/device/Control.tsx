@@ -2,6 +2,7 @@ import { HubConnectionBuilder, type HubConnection } from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
+import useApiClient from "../../hooks/useApiClient";
 
 const RTC_CONFIG: RTCConfiguration = {
 	iceServers: [
@@ -33,6 +34,7 @@ const RTC_CONFIG: RTCConfiguration = {
 
 export default function Control() {
     const { deviceId } = useParams<{deviceId: string}>();
+    const apiClient = useApiClient();
 
     const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
     const hubConnectionRefObject = useRef<HubConnection>(null);
