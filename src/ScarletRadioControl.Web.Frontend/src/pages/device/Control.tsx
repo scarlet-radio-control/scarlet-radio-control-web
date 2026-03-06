@@ -44,6 +44,16 @@ export default function Control() {
     const [status, setStatus] = useState<"undefined" | "signalr-connected" | "signalr-error" | "offer-sent" | "connected">("undefined");
 
     useEffect(() => {
+        const useEffectAsync = async () => {
+            const rtcConfiguration = await apiClient.current!.api.v1.stun.rtcConfiguration.get();
+            console.log("requested rtcConfiguration", rtcConfiguration);
+        }
+
+        useEffectAsync().catch((reason) => {console.error(reason)});
+        return () => {};
+    }, [deviceId]);
+
+    useEffect(() => {
         startHubConnection()
             .catch((reason) => {
                 console.error(reason);
