@@ -7,7 +7,7 @@ type SignalMessage =
   | { type: "ice"; candidate: RTCIceCandidateInit }
   | { type: "reset" };
 
-export default function Caller() {
+export default function ControlTest() {
 
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
 
