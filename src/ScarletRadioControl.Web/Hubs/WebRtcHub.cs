@@ -12,10 +12,14 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 		await this.Clients.OthersInGroup(deviceId).ReceiverJoined(this.Context.ConnectionId);
 	}
 
-	public async Task SenderJoin(string deviceId)
+	public async Task SendAnswer(string deviceId, string targetConnectionId, object answer)
 	{
-		await this.Groups.AddToGroupAsync(this.Context.ConnectionId, deviceId);
-		await this.Clients.OthersInGroup(deviceId).SenderJoined(this.Context.ConnectionId);
+		//await this.Clients.Client(targetConnectionId).ReceiveAnswer(this.Context.ConnectionId, answer);
+	}
+
+	public async Task SendIceCandidate(string deviceId, string targetConnectionId, object candidate)
+	{
+		await this.Clients.Client(targetConnectionId).ReceiveIceCandidate(this.Context.ConnectionId, candidate);
 	}
 
 	public async Task SendOffer(string deviceId, string targetConnectionId, object offer)
@@ -23,22 +27,10 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 		await this.Clients.Client(targetConnectionId).ReceiveOffer(this.Context.ConnectionId, offer);
 	}
 
-
-
-
-
-
-
-
-
-	public async Task SendAnswer(string roomId, string targetConnectionId, object answer)
+	public async Task SenderJoin(string deviceId)
 	{
-		//await this.Clients.Client(targetConnectionId).ReceiveAnswer(this.Context.ConnectionId, answer);
-	}
-
-	public async Task SendIceCandidate(string roomId, string targetConnectionId, object candidate)
-	{
-		await this.Clients.Client(targetConnectionId).ReceiveIceCandidate(this.Context.ConnectionId, candidate);
+		await this.Groups.AddToGroupAsync(this.Context.ConnectionId, deviceId);
+		await this.Clients.OthersInGroup(deviceId).SenderJoined(this.Context.ConnectionId);
 	}
 
 	public interface IWebRtcClient
