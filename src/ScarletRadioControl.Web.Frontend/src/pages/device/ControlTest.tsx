@@ -42,7 +42,7 @@ export default function ControlTest() {
 			});
 
 			hubConnectionRefObject.current!.start();
-			hubConnectionRefObject.current!.send("SenderJoined", deviceId!);
+			hubConnectionRefObject.current!.send("SenderJoin", deviceId!);
 
 	//		const mediaStream = (htmlVideElementRefObject.current as any).captureStream() as MediaStream;
 	//		for (const mediaStreamTrack of mediaStream.getTracks()) {
