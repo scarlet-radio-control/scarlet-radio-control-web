@@ -9,8 +9,9 @@ export default function useApiClient() {
     useEffect(() => {    
         const anonymousAuthenticationProvider = new AnonymousAuthenticationProvider();
         const fetchRequestAdapter = new FetchRequestAdapter(anonymousAuthenticationProvider);
-        apiClientRefObject.current = createApiClient(fetchRequestAdapter);
+        const apiClient = createApiClient(fetchRequestAdapter);
 
+        apiClientRefObject.current = apiClient;
         return () => { };
     }, []);
     return apiClientRefObject;
