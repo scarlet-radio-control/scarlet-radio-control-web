@@ -15,11 +15,14 @@ export default function useHubConnection() {
             hubConnectionRefObject.current = hubConnection;
         };
 
-
         useEffectAsync().catch((reason) => { console.error(reason) });
         return () => { 
-            if (hubConnectionRefObject.current === null) { return;}
-            hubConnectionRefObject.current.stop();
+            const disposeAsync = async () => { 
+                if (hubConnectionRefObject.current === null) { return; }
+                await hubConnectionRefObject.current.stop();
+            }
+
+            disposeAsync().catch((reason) => { console.error(reason) });
         };
     }, []);
     return hubConnectionRefObject;
