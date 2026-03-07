@@ -6,26 +6,26 @@ import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
 import useHubConnection from "../../hooks/useHubConnection";
 
 export default function ControlTest() {
-	//const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
+	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
 
 	//const apiClient = useApiClient();
-	//const hubConnectionRefObject = useHubConnection();
+	const hubConnectionRefObject = useHubConnection();
 	const { deviceId } = useParams<{deviceId: string}>();
 	const htmlVideElementRefObject = useRef<HTMLVideoElement>(null);
 	//const rtcIceCandiateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
-	//const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
+	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
 
     const [status, setStatus] = useState<"undefined">("undefined");
 
-    //useEffect(() => {
-    //    const useEffectAsync = async () => {
-    //        const rtcConfiguration = await apiClient.current!.api.v1.stun.rtcConfiguration.get();
-    //        setRtcConfiguration(rtcConfiguration as RTCConfiguration);
-    //    }
+    useEffect(() => {
+        const useEffectAsync = async () => {
+            const rtcConfiguration = await apiClient.current!.api.v1.stun.rtcConfiguration.get();
+            setRtcConfiguration(rtcConfiguration as RTCConfiguration);
+        }
 
-    //    useEffectAsync().catch((reason) => {console.error(reason)});
-    //    return () => {};
-    //}, [deviceId]);
+        useEffectAsync().catch((reason) => {console.error(reason)});
+        return () => {};
+    }, [deviceId]);
 
 	//useEffect(() => {
  //       const useEffectAsync = async () => {
