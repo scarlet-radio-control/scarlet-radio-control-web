@@ -153,7 +153,7 @@ export default function ControlTest() {
 	function stop() {
 		remoteDescSetRef.current = false;
 		pendingIceRef.current = [];
-		setStatus("idle");
+		//setStatus("idle");
 		setError("");
 
 		pcRef.current?.close();
