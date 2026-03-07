@@ -6,6 +6,26 @@ namespace ScarletRadioControl.Web.Hubs;
 public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 {
 
+	public async Task ReceiverJoin(string deviceId)
+	{
+		await this.Groups.AddToGroupAsync(this.Context.ConnectionId, deviceId);
+		await this.Clients.OthersInGroup(deviceId).ReceiverJoined(this.Context.ConnectionId);
+	}
+
+	public async Task SenderJoin(string deviceId)
+	{
+		await this.Groups.AddToGroupAsync(this.Context.ConnectionId, deviceId);
+		await this.Clients.OthersInGroup(deviceId).SenderJoined(this.Context.ConnectionId);
+	}
+
+
+
+
+
+
+
+
+
 	public async Task JoinRoom(string roomId)
 	{
 		await this.Groups.AddToGroupAsync(this.Context.ConnectionId, roomId);
@@ -29,6 +49,14 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 
 	public interface IWebRtcClient
 	{
+		Task ReceiverJoined(string connectionId);
+		Task SenderJoined(string connectionId);
+
+
+
+
+
+
 		Task PeerJoined(string connectionId);
 
 		Task ReceiveOffer(string fromConnectionId, object offer);
