@@ -27,18 +27,22 @@ export default function ControlTest() {
         return () => {};
     }, [deviceId]);
 
-	//useEffect(() => {
- //       const useEffectAsync = async () => {
-	//		hubConnectionRefObject.current!.on("ReceiveAnswer", async (remoteConnectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
-	//			await rtcPeerConnectionRefObject.current!.setRemoteDescription(rtcSessionDescriptionInit);
-	//		});
-	//		hubConnectionRefObject.current!.on("ReceiveIceCandidate", async (remoteConnectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
-	//			await rtcPeerConnectionRefObject.current!.addIceCandidate(rtcIceCandidateInit);
-	//		});
-	//		hubConnectionRefObject.current!.on("ReceiverJoin", async (remoteConnectionId: string) => {});
+	useEffect(() => {
+		const useEffectAsync = async () => {
+			hubConnectionRefObject.current!.on("ReceiveAnswer", async (remoteConnectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
+				console.log("ReceiveAnswer", remoteConnectionId, rtcSessionDescriptionInit);
+				await rtcPeerConnectionRefObject.current!.setRemoteDescription(rtcSessionDescriptionInit);
+			});
+			hubConnectionRefObject.current!.on("ReceiveIceCandidate", async (remoteConnectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
+				console.log("ReceiveIceCandidate", remoteConnectionId, rtcIceCandidateInit);
+				await rtcPeerConnectionRefObject.current!.addIceCandidate(rtcIceCandidateInit);
+			});
+			hubConnectionRefObject.current!.on("ReceiverJoin", async (remoteConnectionId: string) => {
+				console.log("ReceiverJoin", remoteConnectionId);
+			});
 
-	//		hubConnectionRefObject.current!.start();
-	//		hubConnectionRefObject.current!.send("SenderJoined", deviceId!);
+			hubConnectionRefObject.current!.start();
+			hubConnectionRefObject.current!.send("SenderJoined", deviceId!);
 
 	//		const mediaStream = (htmlVideElementRefObject.current as any).captureStream() as MediaStream;
 	//		for (const mediaStreamTrack of mediaStream.getTracks()) {
@@ -48,11 +52,11 @@ export default function ControlTest() {
 	//		const localOfferRtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current!.createOffer();
 	//		await rtcPeerConnectionRefObject.current!.setLocalDescription(localOfferRtcSessionDescriptionInit);
 	//		hubConnectionRefObject.current!.send("SendOffer", deviceId!, localOfferRtcSessionDescriptionInit);
-	//	}
+		}
 
- //       useEffectAsync().catch((reason) => {console.error(reason)});
- //       return () => {};
-	//}, [deviceId, rtcConfiguration]);
+		useEffectAsync().catch((reason) => {console.error(reason)});
+		return () => {};
+	}, [deviceId, rtcConfiguration]);
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
