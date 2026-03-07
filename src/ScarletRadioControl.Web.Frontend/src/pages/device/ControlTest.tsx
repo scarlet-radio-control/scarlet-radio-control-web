@@ -15,7 +15,7 @@ export default function ControlTest() {
 	const rtcIceCandiateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
 	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
 
-	const [status, setStatus] = useState<"idle" | "getting-media" | "creating-offer" | "waiting-answer" | "connected">("idle");
+    const [status, setStatus] = useState<"undefined" | "signalr-connected" | "signalr-error" | "offer-sent" | "connected">("undefined");
 
     useEffect(() => {
         const useEffectAsync = async () => {
@@ -29,9 +29,14 @@ export default function ControlTest() {
 
 	useEffect(() => {
         const useEffectAsync = async () => {
-			console.log("requested rtcConfiguration", rtcPeerConnectionRefObject.current?.getConfiguration());
-            //const rtcConfiguration = await apiClient.current!.api.v1.stun.rtcConfiguration.get();
-            //rtcConfigurationRefObject.current = rtcConfiguration as RTCConfiguration;
+			const mediaStream = (htmlVideElementRefObject.current as any).captureStream() as MediaStream;
+			for (const mediaStreamTrack of mediaStream.getTracks()) {
+				rtcPeerConnectionRefObject.current!.addTrack(mediaStreamTrack, mediaStream);
+			}
+
+			const localOfferRtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current!.createOffer();
+			await rtcPeerConnectionRefObject.current!.setLocalDescription(localOfferRtcSessionDescriptionInit);
+			/* SEND OFFER */
         }
 
         useEffectAsync().catch((reason) => {console.error(reason)});
@@ -127,18 +132,18 @@ export default function ControlTest() {
 				}
 			};
 
-			setStatus("getting-media");
+			//setStatus("getting-media");
 			const stream = (htmlVideElementRefObject.current! as any).captureStream();
 
 			const pc = await createPeerConnection();
 			for (const t of stream.getTracks()) pc.addTrack(t, stream);
 
-			setStatus("creating-offer");
+			//setStatus("creating-offer");
 			const offer = await pc.createOffer();
 			await pc.setLocalDescription(offer);
 			post({ type: "offer", sdp: offer });
 
-			setStatus("waiting-answer");
+			//setStatus("waiting-answer");
 			setStarted(true);
 		} catch (e: any) {
 			setError(e?.message || String(e));
