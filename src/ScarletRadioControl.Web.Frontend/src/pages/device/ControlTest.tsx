@@ -4,14 +4,15 @@ import { useParams } from "react-router-dom";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
 import type { HubConnection } from "@microsoft/signalr";
+import useHubConnection from "../../hooks/useHubConnection";
 
 export default function ControlTest() {
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
 
 	const apiClient = useApiClient();
+	const hubConnectionRefObject = useHubConnection();
 	const { deviceId } = useParams<{deviceId: string}>();
 	const htmlVideElementRefObject = useRef<HTMLVideoElement>(null);
-	const hubConnectionRefObject = useRef<HubConnection>(null);
 	const rtcIceCandiateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
 	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
 
