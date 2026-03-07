@@ -5,47 +5,38 @@ import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
 import type { HubConnection } from "@microsoft/signalr";
 
-type SignalMessage =
-	| { type: "offer"; sdp: RTCSessionDescriptionInit }
-	| { type: "answer"; sdp: RTCSessionDescriptionInit }
-	| { type: "ice"; candidate: RTCIceCandidateInit }
-	| { type: "reset" };
-
-const RTC_CONFIG: RTCConfiguration = {
-	iceServers: [
-		{
-			urls: "stun:stun.relay.metered.ca:80",
-		},
-		{
-			urls: "turn:global.relay.metered.ca:80",
-			username: "b6e796d3b6bc333d4bf58b84",
-			credential: "xkw2mfGQr0ZAODKl",
-		},
-		{
-			urls: "turn:global.relay.metered.ca:80?transport=tcp",
-			username: "b6e796d3b6bc333d4bf58b84",
-			credential: "xkw2mfGQr0ZAODKl",
-		},
-		{
-			urls: "turn:global.relay.metered.ca:443",
-			username: "b6e796d3b6bc333d4bf58b84",
-			credential: "xkw2mfGQr0ZAODKl",
-		},
-		{
-			urls: "turns:global.relay.metered.ca:443?transport=tcp",
-			username: "b6e796d3b6bc333d4bf58b84",
-			credential: "xkw2mfGQr0ZAODKl",
-		},
-	],
-};
-
 export default function ControlTest() {
+	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
+
 	const apiClient = useApiClient();
 	const { deviceId } = useParams<{deviceId: string}>();
 	const htmlVideElementRefObject = useRef<HTMLVideoElement>(null);
 	const hubConnectionRefObject = useRef<HubConnection>(null);
 	const rtcIceCandiateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
-	const rtcPeerConnectionRefObject = useRtcPeerConnection(RTC_CONFIG);
+	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
+
+	const [status, setStatus] = useState<"idle" | "getting-media" | "creating-offer" | "waiting-answer" | "connected">("idle");
+
+    useEffect(() => {
+        const useEffectAsync = async () => {
+            const rtcConfiguration = await apiClient.current!.api.v1.stun.rtcConfiguration.get();
+            setRtcConfiguration(rtcConfiguration as RTCConfiguration);
+        }
+
+        useEffectAsync().catch((reason) => {console.error(reason)});
+        return () => {};
+    }, [deviceId]);
+
+	useEffect(() => {
+        const useEffectAsync = async () => {
+			console.log("requested rtcConfiguration", rtcConfiguration);
+            //const rtcConfiguration = await apiClient.current!.api.v1.stun.rtcConfiguration.get();
+            //rtcConfigurationRefObject.current = rtcConfiguration as RTCConfiguration;
+        }
+
+        useEffectAsync().catch((reason) => {console.error(reason)});
+        return () => {};
+	}, [deviceId, rtcConfiguration]);
 
 
 
@@ -56,13 +47,13 @@ export default function ControlTest() {
 
 
 
-
-
-
-
+	type SignalMessage =
+		| { type: "offer"; sdp: RTCSessionDescriptionInit }
+		| { type: "answer"; sdp: RTCSessionDescriptionInit }
+		| { type: "ice"; candidate: RTCIceCandidateInit }
+		| { type: "reset" };
 
 	const [started, setStarted] = useState(false);
-	const [status, setStatus] = useState<"idle" | "getting-media" | "creating-offer" | "waiting-answer" | "connected">("idle");
 	const [error, setError] = useState("");
 
 	const pcRef = useRef<RTCPeerConnection | null>(null);
