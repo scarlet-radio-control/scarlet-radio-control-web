@@ -42,4 +42,8 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 		Task SenderJoined(string connectionId);
 	}
 
+	public record RTCIceCandidateInit { }
+
+	public record RTCSessionDescriptionInit { }
+
 }

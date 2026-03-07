@@ -44,14 +44,14 @@ export default function ControlTest() {
 			hubConnectionRefObject.current!.start();
 			hubConnectionRefObject.current!.send("SenderJoin", deviceId!);
 
-	//		const mediaStream = (htmlVideElementRefObject.current as any).captureStream() as MediaStream;
-	//		for (const mediaStreamTrack of mediaStream.getTracks()) {
-	//			rtcPeerConnectionRefObject.current!.addTransceiver(mediaStreamTrack, {direction: "sendonly", streams: [mediaStream]});
-	//		}
+			const mediaStream = (htmlVideElementRefObject.current as any).captureStream() as MediaStream;
+			for (const mediaStreamTrack of mediaStream.getTracks()) {
+				rtcPeerConnectionRefObject.current!.addTransceiver(mediaStreamTrack, {direction: "sendonly", streams: [mediaStream]});
+			}
 
-	//		const localOfferRtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current!.createOffer();
-	//		await rtcPeerConnectionRefObject.current!.setLocalDescription(localOfferRtcSessionDescriptionInit);
-	//		hubConnectionRefObject.current!.send("SendOffer", deviceId!, localOfferRtcSessionDescriptionInit);
+			const localOfferRtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current!.createOffer();
+			await rtcPeerConnectionRefObject.current!.setLocalDescription(localOfferRtcSessionDescriptionInit);
+			hubConnectionRefObject.current!.send("SendOffer", deviceId!, localOfferRtcSessionDescriptionInit);
 		}
 
 		useEffectAsync().catch((reason) => {console.error(reason)});
