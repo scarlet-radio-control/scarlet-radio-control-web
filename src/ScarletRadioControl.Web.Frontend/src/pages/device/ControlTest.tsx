@@ -30,6 +30,17 @@ export default function ControlTest() {
 
 	useEffect(() => {
         const useEffectAsync = async () => {
+			hubConnectionRefObject.current!.on("ReceiveAnswer", async (remoteConnectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {});
+			hubConnectionRefObject.current!.on("ReceiveIceCandidate", async (remoteConnectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {});
+			hubConnectionRefObject.current!.on("ReceiverJoin", async (remoteConnectionId: string) => {});
+
+			hubConnectionRefObject.current!.start();
+			hubConnectionRefObject.current!.send("SenderJoined", deviceId!);
+
+
+
+
+
 			const mediaStream = (htmlVideElementRefObject.current as any).captureStream() as MediaStream;
 			for (const mediaStreamTrack of mediaStream.getTracks()) {
 				rtcPeerConnectionRefObject.current!.addTrack(mediaStreamTrack, mediaStream);
@@ -37,8 +48,7 @@ export default function ControlTest() {
 
 			const localOfferRtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current!.createOffer();
 			await rtcPeerConnectionRefObject.current!.setLocalDescription(localOfferRtcSessionDescriptionInit);
-			/* SEND OFFER */
-        }
+		}
 
         useEffectAsync().catch((reason) => {console.error(reason)});
         return () => {};

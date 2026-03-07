@@ -54,9 +54,14 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 
 	public interface IWebRtcClient
 	{
+		Task ReceiveAnswer(string fromConnectionId, object answer);
+
+
+
 		Task ReceiverJoined(string connectionId);
-		Task ReceiverReceiveOffer(string fromConnectionId, object offer);
 		Task SenderJoined(string connectionId);
+
+
 
 
 
