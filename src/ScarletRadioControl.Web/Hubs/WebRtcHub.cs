@@ -18,6 +18,11 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 		await this.Clients.OthersInGroup(deviceId).SenderJoined(this.Context.ConnectionId);
 	}
 
+	public async Task SenderSendOffer(string deviceId, string targetConnectionId, object offer)
+	{
+		await this.Clients.Client(targetConnectionId).ReceiverReceiveOffer(this.Context.ConnectionId, offer);
+	}
+
 
 
 
@@ -50,8 +55,8 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 	public interface IWebRtcClient
 	{
 		Task ReceiverJoined(string connectionId);
+		Task ReceiverReceiveOffer(string fromConnectionId, object offer);
 		Task SenderJoined(string connectionId);
-
 
 
 
