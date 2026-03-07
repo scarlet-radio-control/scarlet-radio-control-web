@@ -6,8 +6,9 @@ import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
 import useHubConnection from "../../hooks/useHubConnection";
 
 export default function ControlTest() {
+	const [remoteConnectionId, setRemoteConnectionId] = useState<string | null>(null);
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
-	const [status, setStatus] = useState<"undefined">("undefined");
+	const [status, setStatus] = useState<"undefined" |"rtc-configuration-received">("undefined");
 
 	const apiClient = useApiClient();
 	const hubConnectionRefObject = useHubConnection();
@@ -19,13 +20,36 @@ export default function ControlTest() {
     useEffect(() => {
         const useEffectAsync = async () => {
 			if (apiClient.current === null) { return; }
-            const rtcConfiguration = await apiClient.current!.api.v1.stun.rtcConfiguration.get();
+            const rtcConfiguration = await apiClient.current.api.v1.stun.rtcConfiguration.get();
             setRtcConfiguration(rtcConfiguration as RTCConfiguration);
+			setStatus("rtc-configuration-received");
         }
 
         useEffectAsync().catch((reason) => {console.error(reason)});
         return () => {};
     }, [deviceId]);
+
+	useEffect(() => {
+		const useEffectAsync = async () => {
+			if (hubConnectionRefObject.current === null) { return; }
+			hubConnectionRefObject.current.on("ReceiverJoined", async (remoteConnectionId: string) => {
+				setRemoteConnectionId(remoteConnectionId);
+			});
+			await hubConnectionRefObject.current.start();
+			await hubConnectionRefObject.current.send("SenderJoin", deviceId!);
+		}
+
+		useEffectAsync().catch((reason) => {console.error(reason)});
+		return () => {
+			const disposeAsync = async () => {
+				if (hubConnectionRefObject.current === null) { return; }
+				if(hubConnectionRefObject.current.state !== "Connected") { return; }
+				await hubConnectionRefObject.current.stop();
+			};
+
+			disposeAsync().catch((reason) => {console.error(reason)})
+		};
+	}, [deviceId]);
 
 	useEffect(() => {
 		const useEffectAsync = async () => {
@@ -41,8 +65,8 @@ export default function ControlTest() {
 				console.log("ReceiverJoin", remoteConnectionId);
 			});
 
-			hubConnectionRefObject.current!.start();
-			hubConnectionRefObject.current!.send("SenderJoin", deviceId!);
+			//hubConnectionRefObject.current!.start();
+			//hubConnectionRefObject.current!.send("SenderJoin", deviceId!);
 
 			const mediaStream = (htmlVideElementRefObject.current as any).captureStream() as MediaStream;
 			for (const mediaStreamTrack of mediaStream.getTracks()) {
@@ -51,7 +75,7 @@ export default function ControlTest() {
 
 			const localOfferRtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current!.createOffer();
 			await rtcPeerConnectionRefObject.current!.setLocalDescription(localOfferRtcSessionDescriptionInit);
-			hubConnectionRefObject.current!.send("SendOffer", deviceId!, localOfferRtcSessionDescriptionInit);
+			//hubConnectionRefObject.current!.send("SendOffer", deviceId!, localOfferRtcSessionDescriptionInit);
 		}
 
 		useEffectAsync().catch((reason) => {console.error(reason)});
