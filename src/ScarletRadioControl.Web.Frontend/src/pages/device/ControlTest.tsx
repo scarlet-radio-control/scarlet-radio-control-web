@@ -29,7 +29,7 @@ export default function ControlTest() {
 
 	useEffect(() => {
         const useEffectAsync = async () => {
-			console.log("requested rtcConfiguration", rtcConfiguration);
+			console.log("requested rtcConfiguration", rtcPeerConnectionRefObject.current?.getConfiguration());
             //const rtcConfiguration = await apiClient.current!.api.v1.stun.rtcConfiguration.get();
             //rtcConfigurationRefObject.current = rtcConfiguration as RTCConfiguration;
         }

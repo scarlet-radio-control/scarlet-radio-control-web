@@ -6,7 +6,6 @@ import Control from "./pages/device/Control.tsx"
 import TabCallee from "./pages/WebRtcTests/TabCallee.tsx"
 import TabCaller from "./pages/WebRtcTests/TabCaller.tsx"
 import VideoReceiver from "./pages/WebRtcTests/VideoReceiver.tsx"
-import VideoSender from "./pages/device/ControlTest.tsx"
 import SignalRVideoReceiver from "./pages/WebRtcTests/SignalRVideoReceiver.tsx"
 import SignalRVideoSender from "./pages/WebRtcTests/SignalRVideoSender.tsx"
 import ControlTest from "./pages/device/ControlTest.tsx"
@@ -24,7 +23,6 @@ export default function App() {
 			<Route path="/web-rtc-tests/signalr-video-receiver" element={<SignalRVideoReceiver roomId="test-room" />} />
 			<Route path="/web-rtc-tests/signalr-video-sender" element={<SignalRVideoSender roomId="test-room" />} />
 			<Route path="/web-rtc-tests/video-receiver" element={<VideoReceiver />} />
-			<Route path="/web-rtc-tests/video-sender" element={<VideoSender />} />
 			<Route path="*" element={<h1>404 Not Found</h1>} />
 		</Routes>
 	)
