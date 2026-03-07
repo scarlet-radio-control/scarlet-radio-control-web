@@ -7,18 +7,18 @@ import useHubConnection from "../../hooks/useHubConnection";
 
 export default function ControlTest() {
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
+	const [status, setStatus] = useState<"undefined">("undefined");
 
-	//const apiClient = useApiClient();
+	const apiClient = useApiClient();
 	const hubConnectionRefObject = useHubConnection();
 	const { deviceId } = useParams<{deviceId: string}>();
 	const htmlVideElementRefObject = useRef<HTMLVideoElement>(null);
 	//const rtcIceCandiateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
 	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
 
-    const [status, setStatus] = useState<"undefined">("undefined");
-
     useEffect(() => {
         const useEffectAsync = async () => {
+			if (apiClient.current === null) { return; }
             const rtcConfiguration = await apiClient.current!.api.v1.stun.rtcConfiguration.get();
             setRtcConfiguration(rtcConfiguration as RTCConfiguration);
         }
