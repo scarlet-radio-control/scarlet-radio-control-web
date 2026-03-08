@@ -3,7 +3,7 @@ import countdown from "../../assets/countdown.mp4";
 import { useParams } from "react-router-dom";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
-import {useHubConnection} from "../../context/SignalRContext";
+import {useHubConnection} from "../../context/HubConnectionContext";
 
 export default function ControlTest() {
 	const [remoteConnectionId, setRemoteConnectionId] = useState<string | null>(null);

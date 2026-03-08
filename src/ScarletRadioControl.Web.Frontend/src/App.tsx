@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom"
 import GamepadTest from "./pages/GamepadTest.tsx"
-import {HubConnectionProvider} from "./context/SignalRContext.tsx"
+import {HubConnectionProvider} from "./context/HubConnectionContext.tsx"
 import Index from "./pages/Index.tsx"
 import Basic from "./pages/WebRtcTests/Basic.tsx"
 import Control from "./pages/device/Control.tsx"
