@@ -16,6 +16,11 @@ export default function ControlTest() {
 	const hubConnectionRefObject = useRef<HubConnection>(null);
 	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
 
+	const onReceiverJoin = async (remoteConnectionId: string) => {
+		console.log("ReceiverJoin", remoteConnectionId);
+		setRemoteConnectionId(remoteConnectionId);
+	}
+
     useEffect(() => {
         const useEffectAsync = async () => {
 			if (apiClient.current === null) { return; }
@@ -35,9 +40,7 @@ export default function ControlTest() {
 				console.log("ReceiveIceCandidate", remoteConnectionId, rtcIceCandidateInit);
 				await rtcPeerConnectionRefObject.current!.addIceCandidate(rtcIceCandidateInit);
 			});
-			hubConnection.on("ReceiverJoin", async (remoteConnectionId: string) => {
-				console.log("ReceiverJoin", remoteConnectionId);
-			});
+			hubConnection.on("ReceiverJoin", onReceiverJoin);
 			await hubConnection.start()
 			hubConnectionRefObject.current = hubConnection;
 			await hubConnectionRefObject.current!.send("SenderJoin", deviceId!);
