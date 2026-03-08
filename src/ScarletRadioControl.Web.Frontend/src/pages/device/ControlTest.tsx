@@ -56,17 +56,6 @@ export default function ControlTest() {
         return () => { };
     }, [deviceId]);
 
-	useEffect(() => {
-		const useEffectAsync = async () => {
-			
-
-
-		}
-
-		useEffectAsync().catch((reason) => {console.error(reason)});
-		return () => {};
-	}, [deviceId, rtcConfiguration]);
-
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
              <p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - RTC Mode: {"unknown"}</p> 
