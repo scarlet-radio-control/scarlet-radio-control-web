@@ -23,7 +23,6 @@ export default function ControlTest() {
             setRtcConfiguration(rtcConfiguration as RTCConfiguration);
 			setStatus("rtc-configuration-received");
 
-			/* HubConnection */ 
 			const hubConnection = new HubConnectionBuilder()
 				.withUrl("/hubs/web-rtc-hub")
 				.withAutomaticReconnect()
@@ -44,6 +43,13 @@ export default function ControlTest() {
 			await hubConnectionRefObject.current!.send("SenderJoin", deviceId!);
 			setStatus("hub-connection-established");
 
+			const mediaStream = (htmlVideElementRefObject.current as any).captureStream() as MediaStream;
+			for (const mediaStreamTrack of mediaStream.getTracks()) {
+				rtcPeerConnectionRefObject.current!.addTransceiver(mediaStreamTrack, {direction: "sendonly", streams: [mediaStream]});
+			}
+			const localOfferRtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current!.createOffer();
+			await rtcPeerConnectionRefObject.current!.setLocalDescription(localOfferRtcSessionDescriptionInit);
+			hubConnectionRefObject.current!.send("SendOffer", deviceId!, localOfferRtcSessionDescriptionInit);
         }
 
         useEffectAsync().catch((reason) => {console.error(reason)});
@@ -54,17 +60,7 @@ export default function ControlTest() {
 		const useEffectAsync = async () => {
 			
 
-			//hubConnectionRefObject.current!.start();
-			//hubConnectionRefObject.current!.send("SenderJoin", deviceId!);
 
-			const mediaStream = (htmlVideElementRefObject.current as any).captureStream() as MediaStream;
-			for (const mediaStreamTrack of mediaStream.getTracks()) {
-				rtcPeerConnectionRefObject.current!.addTransceiver(mediaStreamTrack, {direction: "sendonly", streams: [mediaStream]});
-			}
-
-			const localOfferRtcSessionDescriptionInit = await rtcPeerConnectionRefObject.current!.createOffer();
-			await rtcPeerConnectionRefObject.current!.setLocalDescription(localOfferRtcSessionDescriptionInit);
-			//hubConnectionRefObject.current!.send("SendOffer", deviceId!, localOfferRtcSessionDescriptionInit);
 		}
 
 		useEffectAsync().catch((reason) => {console.error(reason)});
