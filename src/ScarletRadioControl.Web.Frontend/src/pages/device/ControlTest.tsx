@@ -24,18 +24,23 @@ export default function ControlTest() {
 			setStatus("rtc-configuration-received");
 
 			/* HubConnection */ 
-			await setupHubConnection();
-			hubConnectionRefObject.current!.on("ReceiveAnswer", async (remoteConnectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
+			const hubConnection = new HubConnectionBuilder()
+				.withUrl("/hubs/web-rtc-hub")
+				.withAutomaticReconnect()
+				.build();
+			hubConnection.on("ReceiveAnswer", async (remoteConnectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
 				console.log("ReceiveAnswer", remoteConnectionId, rtcSessionDescriptionInit);
 				await rtcPeerConnectionRefObject.current!.setRemoteDescription(rtcSessionDescriptionInit);
 			});
-			hubConnectionRefObject.current!.on("ReceiveIceCandidate", async (remoteConnectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
+			hubConnection.on("ReceiveIceCandidate", async (remoteConnectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
 				console.log("ReceiveIceCandidate", remoteConnectionId, rtcIceCandidateInit);
 				await rtcPeerConnectionRefObject.current!.addIceCandidate(rtcIceCandidateInit);
 			});
-			hubConnectionRefObject.current!.on("ReceiverJoin", async (remoteConnectionId: string) => {
+			hubConnection.on("ReceiverJoin", async (remoteConnectionId: string) => {
 				console.log("ReceiverJoin", remoteConnectionId);
 			});
+			await hubConnection.start()
+			hubConnectionRefObject.current = hubConnection;
 			await hubConnectionRefObject.current!.send("SenderJoin", deviceId!);
 			setStatus("hub-connection-established");
 
@@ -44,16 +49,6 @@ export default function ControlTest() {
         useEffectAsync().catch((reason) => {console.error(reason)});
         return () => { };
     }, [deviceId]);
-
-	const setupHubConnection = async () => {
-		const hubConnection = new HubConnectionBuilder()
-            .withUrl("/hubs/web-rtc-hub")
-            .withAutomaticReconnect()
-            .build();
-
-        await hubConnection.start()
-		hubConnectionRefObject.current = hubConnection;
-	}
 
 	useEffect(() => {
 		const useEffectAsync = async () => {
