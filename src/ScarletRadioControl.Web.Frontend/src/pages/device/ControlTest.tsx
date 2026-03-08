@@ -3,7 +3,7 @@ import countdown from "../../assets/countdown.mp4";
 import { useParams } from "react-router-dom";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
-import useHubConnection from "../../hooks/useHubConnection";
+import {useHubConnection} from "../../context/SignalRContext";
 
 export default function ControlTest() {
 	const [remoteConnectionId, setRemoteConnectionId] = useState<string | null>(null);
@@ -11,7 +11,7 @@ export default function ControlTest() {
 	const [status, setStatus] = useState<"undefined" |"rtc-configuration-received">("undefined");
 
 	const apiClient = useApiClient();
-	const hubConnectionRefObject = useHubConnection();
+	const hubConnection = useHubConnection();
 	const { deviceId } = useParams<{deviceId: string}>();
 	const htmlVideElementRefObject = useRef<HTMLVideoElement>(null);
 	//const rtcIceCandiateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
@@ -30,38 +30,28 @@ export default function ControlTest() {
     }, [deviceId]);
 
 	useEffect(() => {
-		const useEffectAsync = async () => {
-			if (hubConnectionRefObject.current === null) { return; }
-			hubConnectionRefObject.current.on("ReceiverJoined", async (remoteConnectionId: string) => {
-				setRemoteConnectionId(remoteConnectionId);
-			});
-			await hubConnectionRefObject.current.start();
-			await hubConnectionRefObject.current.send("SenderJoin", deviceId!);
-		}
+		hubConnection.on("ReceiverJoined", async (remoteConnectionId: string) => {
+			setRemoteConnectionId(remoteConnectionId);
+		});
+		hubConnection.send("SenderJoin", deviceId!)
+			.catch((reason) => console.error(reason));
 
-		useEffectAsync().catch((reason) => {console.error(reason)});
 		return () => {
-			const disposeAsync = async () => {
-				if (hubConnectionRefObject.current === null) { return; }
-				if(hubConnectionRefObject.current.state !== "Connected") { return; }
-				await hubConnectionRefObject.current.stop();
-			};
-
-			disposeAsync().catch((reason) => {console.error(reason)})
+			hubConnection.off("ReceiverJoined");
 		};
 	}, [deviceId]);
 
 	useEffect(() => {
 		const useEffectAsync = async () => {
-			hubConnectionRefObject.current!.on("ReceiveAnswer", async (remoteConnectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
+			hubConnection.on("ReceiveAnswer", async (remoteConnectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
 				console.log("ReceiveAnswer", remoteConnectionId, rtcSessionDescriptionInit);
 				await rtcPeerConnectionRefObject.current!.setRemoteDescription(rtcSessionDescriptionInit);
 			});
-			hubConnectionRefObject.current!.on("ReceiveIceCandidate", async (remoteConnectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
+			hubConnection.on("ReceiveIceCandidate", async (remoteConnectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
 				console.log("ReceiveIceCandidate", remoteConnectionId, rtcIceCandidateInit);
 				await rtcPeerConnectionRefObject.current!.addIceCandidate(rtcIceCandidateInit);
 			});
-			hubConnectionRefObject.current!.on("ReceiverJoin", async (remoteConnectionId: string) => {
+			hubConnection.on("ReceiverJoin", async (remoteConnectionId: string) => {
 				console.log("ReceiverJoin", remoteConnectionId);
 			});
 
