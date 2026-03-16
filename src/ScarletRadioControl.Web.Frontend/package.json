@@ -3,7 +3,7 @@
 	"dependencies": {
 		"@microsoft/kiota-bundle": "^1.0.0-preview.99",
 		"@microsoft/signalr": "^10.0.0",
-		"@tailwindcss/vite": "^4.1.18",
+		"@tailwindcss/vite": "^4.2.1",
 		"react": "^19.2.4",
 		"react-dom": "^19.2.4",
 		"react-router-dom": "^7.13.0",
@@ -16,8 +16,8 @@
 		"@types/react": "^19.2.14",
 		"@types/react-dom": "^19.2.3",
 		"@types/react-router-dom": "^5.3.3",
-		"@vitejs/plugin-basic-ssl": "^2.1.4",
-		"@vitejs/plugin-react": "^5.1.1",
+		"@vitejs/plugin-basic-ssl": "^2.2.0",
+		"@vitejs/plugin-react": "^6.0.1",
 		"babel-plugin-react-compiler": "^1.0.0",
 		"eslint": "^9.39.1",
 		"eslint-plugin-react-hooks": "^7.0.1",
@@ -26,16 +26,16 @@
 		"install": "^0.13.0",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.56.0",
-		"vite": "^7.3.1"
+		"vite": "^8.0.0"
 	},
 	"name": "scarlet-radio-control.web.frontend",
 	"private": true,
 	"scripts": {
-		"build": "tsc -b && vite build",
+		"build": "tsc -b && vite build ./",
 		"lint": "eslint ./",
 		"lint:fix": "eslint ./ --fix",
-		"preview": "vite preview",
-		"start": "vite"
+		"preview": "vite preview ./",
+		"start": "vite ./"
 	},
 	"type": "module",
 	"version": "0.0.0"
