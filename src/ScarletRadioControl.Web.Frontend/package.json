@@ -1,13 +1,12 @@
 {
 	"$schema": "https://www.schemastore.org/package.json",
 	"dependencies": {
-		"@microsoft/kiota-bundle": "^1.0.0-preview.99",
+		"@microsoft/kiota-bundle": "^1.0.0-preview.100",
 		"@microsoft/signalr": "^10.0.0",
 		"@tailwindcss/vite": "^4.2.1",
 		"react": "^19.2.4",
 		"react-dom": "^19.2.4",
-		"react-router-dom": "^7.13.0",
-		"tailwindcss": "^4.1.18"
+		"react-router-dom": "^7.13.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.1",
