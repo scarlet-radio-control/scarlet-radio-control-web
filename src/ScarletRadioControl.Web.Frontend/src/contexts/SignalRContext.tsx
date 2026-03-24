@@ -27,7 +27,7 @@ export const SignalRProvider = ({ children }: SignalRProviderProps) => {
 		hubConnection
 			.start()
 			.then(() => console.log("SignalR Connected"))
-			.catch(err => console.error("Connection failed: ", err));
+			.catch(reason => console.error(reason));
 		return () => {
 			hubConnection.stop();
 		};
