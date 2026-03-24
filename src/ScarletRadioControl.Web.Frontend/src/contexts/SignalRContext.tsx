@@ -10,31 +10,31 @@ interface SignalRProviderProps {
 }
 
 export const SignalRProvider = ({ children }: SignalRProviderProps) => {
-	const [connection, setConnection] = useState<HubConnection | null>(null);
+	const [hubConnection, setHubConnection] = useState<HubConnection | null>(null);
 
 	useEffect(() => {
-		const hubConnection = new HubConnectionBuilder()
+		const newHubConnection = new HubConnectionBuilder()
 			.withUrl("/hubs/web-rtc-hub")
 			.withAutomaticReconnect()
 			.build();
 
-		setConnection(hubConnection);
+		setHubConnection(newHubConnection);
   	}, []);
 
   	useEffect(() => {
-		if (!connection) return;
+		if (hubConnection === null) { return; } 
 
-		connection
+		hubConnection
 			.start()
 			.then(() => console.log("SignalR Connected"))
 			.catch(err => console.error("Connection failed: ", err));
 		return () => {
-			connection.stop();
+			hubConnection.stop();
 		};
-  	}, [connection]);
+  	}, [hubConnection]);
 
 	return (
-		<SignalRContext.Provider value={connection}>
+		<SignalRContext.Provider value={hubConnection}>
 			{children}
 		</SignalRContext.Provider>
 	);
