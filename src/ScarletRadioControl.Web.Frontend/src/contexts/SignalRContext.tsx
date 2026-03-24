@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import {HubConnection, HubConnectionBuilder} from "@microsoft/signalr";
+import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 
 export const SignalRContext = createContext<HubConnection | null>(null);
 
-export const useSignalR = () => useContext(SignalRContext);
+export const useSignalRContext = () => useContext(SignalRContext);
 
 interface SignalRProviderProps {
 	children: ReactNode;
