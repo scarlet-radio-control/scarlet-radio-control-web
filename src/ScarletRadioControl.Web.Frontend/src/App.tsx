@@ -9,21 +9,24 @@ import VideoReceiver from "./pages/WebRtcTests/VideoReceiver.tsx"
 import SignalRVideoReceiver from "./pages/WebRtcTests/SignalRVideoReceiver.tsx"
 import SignalRVideoSender from "./pages/WebRtcTests/SignalRVideoSender.tsx"
 import ControlTest from "./pages/device/ControlTest.tsx"
+import { SignalRProvider } from "./contexts/SignalRContext.tsx"
 
 export default function App() {
 	return (
-		<Routes>
-			<Route path="/" element={<Index />} />
-			<Route path="/device/:deviceId/control" element={<Control />} />
-			<Route path="/device/:deviceId/control-test" element={<ControlTest />} />
-			<Route path="/gamepad-test" element={<GamepadTest />} />
-			<Route path="/web-rtc-tests/basic" element={<Basic />} />
-			<Route path="/web-rtc-tests/tab-callee" element={<TabCallee />} />
-			<Route path="/web-rtc-tests/tab-caller" element={<TabCaller />} />
-			<Route path="/web-rtc-tests/signalr-video-receiver" element={<SignalRVideoReceiver roomId="test-room" />} />
-			<Route path="/web-rtc-tests/signalr-video-sender" element={<SignalRVideoSender roomId="test-room" />} />
-			<Route path="/web-rtc-tests/video-receiver" element={<VideoReceiver />} />
-			<Route path="*" element={<h1>404 Not Found</h1>} />
-		</Routes>
+		<SignalRProvider>
+			<Routes>
+				<Route path="/" element={<Index />} />
+				<Route path="/device/:deviceId/control" element={<Control />} />
+				<Route path="/device/:deviceId/control-test" element={<ControlTest />} />
+				<Route path="/gamepad-test" element={<GamepadTest />} />
+				<Route path="/web-rtc-tests/basic" element={<Basic />} />
+				<Route path="/web-rtc-tests/tab-callee" element={<TabCallee />} />
+				<Route path="/web-rtc-tests/tab-caller" element={<TabCaller />} />
+				<Route path="/web-rtc-tests/signalr-video-receiver" element={<SignalRVideoReceiver roomId="test-room" />} />
+				<Route path="/web-rtc-tests/signalr-video-sender" element={<SignalRVideoSender roomId="test-room" />} />
+				<Route path="/web-rtc-tests/video-receiver" element={<VideoReceiver />} />
+				<Route path="*" element={<h1>404 Not Found</h1>} />
+			</Routes>
+		</SignalRProvider>
 	)
 }
