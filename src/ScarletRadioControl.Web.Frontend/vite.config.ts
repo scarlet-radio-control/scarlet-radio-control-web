@@ -7,11 +7,7 @@ import tailwindcss from "@tailwindcss/vite"
 export default defineConfig({
 	plugins: [
 		basicSsl(),
-		react({
-			babel: {
-				plugins: ["babel-plugin-react-compiler"]
-			}
-		}),
+		react(),
 		tailwindcss(),
 		/*
 		{
