@@ -166,7 +166,7 @@ export default function ControlTest() {
 			);
 
 			await hubConnectionRefObject.current.start();
-			await hubConnectionRefObject.current.invoke("JoinRoom", deviceId);
+			await hubConnectionRefObject.current.invoke("JoinDevice", deviceId);
 
 			if (!disposed) {
 				setStatus("waiting-for-receiver");
