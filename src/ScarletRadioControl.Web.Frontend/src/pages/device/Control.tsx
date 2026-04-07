@@ -12,6 +12,8 @@ export default function Control() {
 
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
 	const [status, setStatus] = useState<Status>("loading");
+	const [localCandidateType, setLocalCandidateType] = useState<string | null>(null);
+	const [remoteCandidateType, setRemoteCandidateType] = useState<string | null>(null);
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
 	const hubConnectionRefObject = useRef<HubConnection>(null);
@@ -139,6 +141,20 @@ export default function Control() {
 			peerConnection.onconnectionstatechange = () => {
 				if (!disposed && peerConnection.connectionState === "connected") {
 					setStatus("connected");
+					peerConnection.getStats()
+						.then((x)=> { 
+							x.forEach((report) => {
+								if (report.type === "transport" && report.selectedCandidatePairId !== null){
+									const selectedPair =x.get(report.selectedCandidatePairId);
+
+									const local = x.get(selectedPair.localCandidateId);
+  									const remote = x.get(selectedPair.remoteCandidateId);
+									setLocalCandidateType(local.candidateType)
+									setRemoteCandidateType(remote.candidateType)
+								}
+								console.log(report)
+							});
+						});
 				}
 			};
 
@@ -182,7 +198,7 @@ export default function Control() {
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
-			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Mode: receiver</p>
+			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Local Candidate Type: {localCandidateType} - Remote Candidate Type: {remoteCandidateType}</p>
 			<video
 				autoPlay
 				muted
