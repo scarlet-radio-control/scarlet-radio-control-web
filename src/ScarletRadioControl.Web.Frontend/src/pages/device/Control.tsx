@@ -18,8 +18,6 @@ export default function Control() {
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
 	const [status, setStatus] = useState<Status>("loading");
 	const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | null>(null)
-	const [localCandidateType, setLocalCandidateType] = useState<string | null>(null);
-	const [remoteCandidateType, setRemoteCandidateType] = useState<string | null>(null);
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
 	const hubConnectionRefObject = useRef<HubConnection>(null);
