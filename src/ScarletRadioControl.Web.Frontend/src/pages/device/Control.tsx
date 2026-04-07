@@ -4,6 +4,11 @@ import { useParams } from "react-router-dom";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
 
+interface RTCWellKnownStats {
+	localCandidateType?: string;
+	remoteCandidateType?: string;
+}
+
 type Status = "loading" | "connecting" | "waiting-for-offer" | "answer-sent" | "connected" | "error";
 
 export default function Control() {
@@ -12,6 +17,7 @@ export default function Control() {
 
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
 	const [status, setStatus] = useState<Status>("loading");
+	const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | null>(null)
 	const [localCandidateType, setLocalCandidateType] = useState<string | null>(null);
 	const [remoteCandidateType, setRemoteCandidateType] = useState<string | null>(null);
 
@@ -149,8 +155,10 @@ export default function Control() {
 
 									const local = x.get(selectedPair.localCandidateId);
   									const remote = x.get(selectedPair.remoteCandidateId);
-									setLocalCandidateType(local.candidateType)
-									setRemoteCandidateType(remote.candidateType)
+									setRtcWellKnownStats({
+										localCandidateType: local.candidateType,
+										remoteCandidateType: remote.candidateType,
+									});
 								}
 								console.log(report)
 							});
@@ -198,7 +206,7 @@ export default function Control() {
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
-			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Local Candidate Type: {localCandidateType} - Remote Candidate Type: {remoteCandidateType}</p>
+			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Local Candidate Type: {rtcWellKnownStats?.localCandidateType} - Remote Candidate Type: {rtcWellKnownStats?.remoteCandidateType}</p>
 			<video
 				autoPlay
 				muted
