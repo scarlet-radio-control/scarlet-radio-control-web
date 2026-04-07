@@ -188,7 +188,7 @@ export default function Control() {
 				muted
 				playsInline
 				ref={htmlVideoElementRefObject}
-				style={{ backgroundColor: "#000000", height: "100%", width: "100%" }}
+				style={{ backgroundColor: "#000000", height: "95vh" }}
 			/>
 		</div>
 	);
