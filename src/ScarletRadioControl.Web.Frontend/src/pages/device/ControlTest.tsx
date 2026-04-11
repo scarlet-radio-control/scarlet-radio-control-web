@@ -1,7 +1,8 @@
-import { HubConnectionBuilder, HubConnectionState, type HubConnection } from "@microsoft/signalr";
+import { HubConnectionState } from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import countdown from "../../assets/countdown.mp4";
+import { useSignalRContext } from "../../contexts/SignalRContext";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
 
@@ -10,12 +11,12 @@ type Status = "loading" | "ready" | "connecting" | "waiting-for-receiver" | "off
 export default function ControlTest() {
 	const apiClient = useApiClient();
 	const { deviceId } = useParams<{ deviceId: string }>();
+	const { connected, hubConnection } = useSignalRContext();
 
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
 	const [status, setStatus] = useState<Status>("loading");
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
-	const hubConnectionRefObject = useRef<HubConnection>(null);
 	const rtcIceCandidateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
 	const remotePeerConnectionIdRefObject = useRef<string | null>(null);
 	const tracksAddedRefObject = useRef(false);
@@ -45,7 +46,7 @@ export default function ControlTest() {
 	}, [apiClient, deviceId]);
 
 	useEffect(() => {
-		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current || !htmlVideoElementRefObject.current) {
+		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current || !htmlVideoElementRefObject.current || !hubConnection) {
 			return;
 		}
 
@@ -84,23 +85,19 @@ export default function ControlTest() {
 			}
 		};
 
-		const startHubConnection = async () => {
+		const initializePeerConnection = async () => {
 			await ensureLocalTracks();
-			setStatus("connecting");
 
-			hubConnectionRefObject.current = new HubConnectionBuilder()
-				.withUrl("/hubs/web-rtc-hub")
-				.withAutomaticReconnect()
-				.build();
+			if (!disposed) {
+				setStatus("ready");
+			}
 
 			peerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
 				const localCandidate = rtcPeerConnectionIceEvent.candidate;
-				const hubConnection = hubConnectionRefObject.current;
 				const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
 
 				if (
 					!localCandidate ||
-					!hubConnection ||
 					hubConnection.state !== HubConnectionState.Connected ||
 					!remotePeerConnectionId
 				) {
@@ -121,7 +118,7 @@ export default function ControlTest() {
 				}
 			};
 
-			hubConnectionRefObject.current.on("PeerJoined", async (connectionId: string) => {
+			const handlePeerJoined = async (connectionId: string) => {
 				if (remotePeerConnectionIdRefObject.current === connectionId) {
 					return;
 				}
@@ -130,94 +127,125 @@ export default function ControlTest() {
 
 				const rtcOffer = await peerConnection.createOffer();
 				await peerConnection.setLocalDescription(rtcOffer);
-				await hubConnectionRefObject.current!.invoke("SendOffer", deviceId, connectionId, rtcOffer);
+				await hubConnection.invoke("SendOffer", deviceId, connectionId, rtcOffer);
 
 				if (!disposed) {
 					setStatus("offer-sent");
 				}
-			});
-
-			hubConnectionRefObject.current.on(
-				"ReceiveAnswer",
-				async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
-					remotePeerConnectionIdRefObject.current ??= connectionId;
-
-					await peerConnection.setRemoteDescription(rtcSessionDescriptionInit);
-					await flushPendingIceCandidates();
-
-					if (!disposed) {
-						setStatus("connected");
-					}
-				}
-			);
-
-			hubConnectionRefObject.current.on(
-				"ReceiveIceCandidate",
-				async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
-					remotePeerConnectionIdRefObject.current ??= connectionId;
-
-					if (peerConnection.remoteDescription) {
-						await peerConnection.addIceCandidate(rtcIceCandidateInit);
-						return;
-					}
-
-					rtcIceCandidateInitsRefObject.current.push(rtcIceCandidateInit);
-				}
-			);
-
-			await hubConnectionRefObject.current.start();
-			await hubConnectionRefObject.current.invoke("JoinRoom", deviceId);
-
-			if (!disposed) {
-				setStatus("waiting-for-receiver");
-			}
-		};
-
-		if (htmlVideoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-			setStatus("ready");
-			startHubConnection().catch((reason) => {
-				console.error(reason);
-				if (!disposed) {
-					setStatus("error");
-				}
-			});
-		} else {
-			const handleLoadedData = () => {
-				setStatus("ready");
-				startHubConnection().catch((reason) => {
-					console.error(reason);
-					if (!disposed) {
-						setStatus("error");
-					}
-				});
 			};
 
-			htmlVideoElement.addEventListener("loadeddata", handleLoadedData, { once: true });
+			const handleReceiveAnswer = async (
+				connectionId: string,
+				rtcSessionDescriptionInit: RTCSessionDescriptionInit
+			) => {
+				remotePeerConnectionIdRefObject.current ??= connectionId;
+
+				await peerConnection.setRemoteDescription(rtcSessionDescriptionInit);
+				await flushPendingIceCandidates();
+
+				if (!disposed) {
+					setStatus("connected");
+				}
+			};
+
+			const handleReceiveIceCandidate = async (
+				connectionId: string,
+				rtcIceCandidateInit: RTCIceCandidateInit
+			) => {
+				remotePeerConnectionIdRefObject.current ??= connectionId;
+
+				if (peerConnection.remoteDescription) {
+					await peerConnection.addIceCandidate(rtcIceCandidateInit);
+					return;
+				}
+
+				rtcIceCandidateInitsRefObject.current.push(rtcIceCandidateInit);
+			};
+
+			hubConnection.on("PeerJoined", handlePeerJoined);
+			hubConnection.on("ReceiveAnswer", handleReceiveAnswer);
+			hubConnection.on("ReceiveIceCandidate", handleReceiveIceCandidate);
 
 			return () => {
-				disposed = true;
-				htmlVideoElement.removeEventListener("loadeddata", handleLoadedData);
+				hubConnection.off("PeerJoined", handlePeerJoined);
+				hubConnection.off("ReceiveAnswer", handleReceiveAnswer);
+				hubConnection.off("ReceiveIceCandidate", handleReceiveIceCandidate);
 			};
-		}
+		};
+
+		let cleanupHubHandlers: (() => void) | undefined;
+
+		const initialize = async () => {
+			if (htmlVideoElement.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+				await new Promise<void>((resolve) => {
+					const handleLoadedData = () => {
+						htmlVideoElement.removeEventListener("loadeddata", handleLoadedData);
+						resolve();
+					};
+
+					htmlVideoElement.addEventListener("loadeddata", handleLoadedData);
+				});
+			}
+
+			if (disposed) {
+				return;
+			}
+
+			cleanupHubHandlers = await initializePeerConnection();
+		};
+
+		initialize().catch((reason) => {
+			console.error(reason);
+			if (!disposed) {
+				setStatus("error");
+			}
+		});
 
 		return () => {
 			disposed = true;
 			rtcIceCandidateInitsRefObject.current = [];
 			remotePeerConnectionIdRefObject.current = null;
-			tracksAddedRefObject.current = false;
 
 			try {
 				peerConnection.onicecandidate = null;
 				peerConnection.onconnectionstatechange = null;
 			} catch { }
 
-			try {
-				hubConnectionRefObject.current?.stop();
-			} catch { }
-
-			hubConnectionRefObject.current = null;
+			cleanupHubHandlers?.();
 		};
-	}, [deviceId, rtcConfiguration, rtcPeerConnectionRefObject]);
+	}, [deviceId, hubConnection, rtcConfiguration, rtcPeerConnectionRefObject]);
+
+	useEffect(() => {
+		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current || !htmlVideoElementRefObject.current || !hubConnection) {
+			return;
+		}
+
+		let cancelled = false;
+
+		if (!connected) {
+			setStatus((currentStatus) => currentStatus === "loading" ? currentStatus : "connecting");
+			return () => {
+				cancelled = true;
+			};
+		}
+
+		hubConnection.invoke("JoinDevice", deviceId)
+			.then(() => {
+				if (!cancelled) {
+					setStatus("waiting-for-receiver");
+				}
+			})
+			.catch((reason) => {
+				console.error(reason);
+				if (!cancelled) {
+					setStatus("error");
+				}
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [connected, deviceId, hubConnection, rtcConfiguration, rtcPeerConnectionRefObject]);
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
