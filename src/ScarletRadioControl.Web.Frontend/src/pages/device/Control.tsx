@@ -32,7 +32,7 @@ export default function Control() {
 				setRtcConfiguration(x as RTCConfiguration);
 				setStatus("rtc-configuration-loaded");
 			})
-			.catch(reason=> {
+			.catch(reason => {
 				console.error(reason);
 				setStatus("error");
 			});
@@ -61,6 +61,10 @@ export default function Control() {
 						});
 					});
 				setStatus("connected");
+			}
+
+			if (rtcPeerConnectionRefObject.current.connectionState === "disconnected"){
+				setStatus("rtc-configuration-loaded");
 			}
 		};
 
