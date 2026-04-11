@@ -39,6 +39,20 @@ export default function Control() {
 	}, [apiClient, deviceId]);
 
 	useEffect(() => {
+		rtcPeerConnectionRefObject.current!.ontrack = (rtcTrackEvent) => {
+			const mediaStream = rtcTrackEvent.streams[0];
+			if (htmlVideoElementRefObject.current !== null && mediaStream !== null) {
+				htmlVideoElementRefObject.current.srcObject = mediaStream;
+				htmlVideoElementRefObject.current.play()
+					.catch((reason) => {
+						console.error(reason);
+						setStatus("error");
+					});
+			}
+		};
+	}, [connected, deviceId, rtcPeerConnectionRefObject]);
+
+	useEffect(() => {
 		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current || !hubConnection) {
 			return;
 		}
@@ -77,16 +91,6 @@ export default function Control() {
 				remotePeerConnectionId,
 				localCandidate.toJSON()
 			);
-		};
-
-		peerConnection.ontrack = (rtcPeerConnectionTrackEvent) => {
-			const mediaStream = rtcPeerConnectionTrackEvent.streams[0];
-			if (htmlVideoElementRefObject.current && mediaStream) {
-				htmlVideoElementRefObject.current.srcObject = mediaStream;
-				void htmlVideoElementRefObject.current.play().catch((reason) => {
-					console.error("Failed to autoplay remote stream", reason);
-				});
-			}
 		};
 
 		hubConnection.on(
