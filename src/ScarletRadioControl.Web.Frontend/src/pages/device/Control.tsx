@@ -36,7 +36,7 @@ export default function Control() {
 				console.error(reason);
 				setStatus("error");
 			});
-	}, [apiClient, deviceId]);
+	}, [apiClient]);
 
 	useEffect(() => {
 		if (rtcPeerConnectionRefObject.current === null) { return; }
@@ -76,7 +76,7 @@ export default function Control() {
 				return;
 			}
 
-			await hubConnection.invoke("SendIceCandidate", deviceId, remotePeerConnectionId, localCandidate.toJSON());
+			await hubConnection.invoke("SendIceCandidate", deviceId, remotePeerConnectionId, localCandidate);
 		};
 
 		rtcPeerConnectionRefObject.current.ontrack = (rtcTrackEvent) => {
@@ -92,10 +92,12 @@ export default function Control() {
 					});
 			}
 		};
-	}, [connected, deviceId, rtcPeerConnectionRefObject]);
+	}, [connected, deviceId, hubConnection, rtcPeerConnectionRefObject]);
 
 	useEffect(() => {
-		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current || !hubConnection) {
+		if(!connected || hubConnection === null || rtcPeerConnectionRefObject.current === null) {return; }
+
+		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current) {
 			return;
 		}
 
@@ -115,9 +117,7 @@ export default function Control() {
 			}
 		};
 
-		hubConnection.on(
-				"ReceiveOffer",
-				async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
+		hubConnection.on("ReceiveOffer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
 			remotePeerConnectionIdRefObject.current = connectionId;
 
 			await peerConnection.setRemoteDescription(rtcSessionDescriptionInit);
@@ -131,12 +131,9 @@ export default function Control() {
 			if (!disposed) {
 				setStatus("answer-sent");
 			}
-		}
-			);
+		});
 
-		hubConnection.on(
-				"ReceiveIceCandidate",
-				async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
+		hubConnection.on("ReceiveIceCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
 			remotePeerConnectionIdRefObject.current ??= connectionId;
 
 			if (peerConnection.remoteDescription) {
@@ -145,8 +142,7 @@ export default function Control() {
 			}
 
 			rtcIceCandidateInitsRefObject.current.push(rtcIceCandidateInit);
-		}
-);
+		});
 
 		if (!connected) {
 			setStatus("connecting");
