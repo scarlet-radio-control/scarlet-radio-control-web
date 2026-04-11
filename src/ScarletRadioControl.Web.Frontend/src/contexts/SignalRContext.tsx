@@ -66,9 +66,8 @@ export const SignalRProvider = ({ children }: SignalRProviderProps) => {
 
 		return () => {
 			disposed = true;
-			setConnected(false);
-			setHubConnection(null);
-			newHubConnection.stop();
+			newHubConnection.stop()
+				.catch(reason => console.log(reason));
 		};
 	}, []);
 
