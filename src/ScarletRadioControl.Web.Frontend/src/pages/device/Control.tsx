@@ -39,9 +39,13 @@ export default function Control() {
 	}, [apiClient, deviceId]);
 
 	useEffect(() => {
-		rtcPeerConnectionRefObject.current!.onconnectionstatechange = () => {
-			if (rtcPeerConnectionRefObject.current!.connectionState === "connected") {
-				rtcPeerConnectionRefObject.current!.getStats()
+		if (rtcPeerConnectionRefObject.current === null) { return; }
+
+		rtcPeerConnectionRefObject.current.onconnectionstatechange = () => {
+			if (rtcPeerConnectionRefObject.current === null) { return; }
+
+			if (rtcPeerConnectionRefObject.current.connectionState === "connected") {
+				rtcPeerConnectionRefObject.current.getStats()
 					.then((x)=> { 
 						x.forEach((report) => {
 							if (report.type === "transport" && report.selectedCandidatePairId !== null){
@@ -60,9 +64,22 @@ export default function Control() {
 			}
 		};
 
-		rtcPeerConnectionRefObject.current!.ontrack = (rtcTrackEvent) => {
+		rtcPeerConnectionRefObject.current.onicecandidate = async (rtcPeerConnectionIceEvent) => {
+			const localCandidate = rtcPeerConnectionIceEvent.candidate;
+			const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
+
+			if (!localCandidate || connected || hubConnection === null || !remotePeerConnectionId) {
+				return;
+			}
+
+			await hubConnection.invoke("SendIceCandidate", deviceId, remotePeerConnectionId, localCandidate.toJSON());
+		};
+
+		rtcPeerConnectionRefObject.current.ontrack = (rtcTrackEvent) => {
+			if (htmlVideoElementRefObject.current === null) {return;}
+			
 			const mediaStream = rtcTrackEvent.streams[0];
-			if (htmlVideoElementRefObject.current !== null && mediaStream !== null) {
+			if (mediaStream !== null) {
 				htmlVideoElementRefObject.current.srcObject = mediaStream;
 				htmlVideoElementRefObject.current.play()
 					.catch((reason) => {
@@ -92,26 +109,6 @@ export default function Control() {
 			for (const queuedCandidate of queuedCandidates) {
 				await peerConnection.addIceCandidate(queuedCandidate);
 			}
-		};
-
-		peerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
-			const localCandidate = rtcPeerConnectionIceEvent.candidate;
-			const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
-
-			if (
-				!localCandidate ||
-				hubConnection.state !== HubConnectionState.Connected ||
-				!remotePeerConnectionId
-			) {
-				return;
-			}
-
-			await hubConnection.invoke(
-				"SendIceCandidate",
-				deviceId,
-				remotePeerConnectionId,
-				localCandidate.toJSON()
-			);
 		};
 
 		hubConnection.on(
