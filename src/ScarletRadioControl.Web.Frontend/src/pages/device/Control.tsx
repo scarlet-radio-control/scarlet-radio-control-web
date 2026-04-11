@@ -1,6 +1,7 @@
-import { HubConnectionBuilder, HubConnectionState, type HubConnection } from "@microsoft/signalr";
+import { HubConnectionState } from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useSignalRContext } from "../../contexts/SignalRContext";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
 
@@ -14,13 +15,13 @@ type Status = "loading" | "connecting" | "waiting-for-offer" | "answer-sent" | "
 export default function Control() {
 	const { deviceId } = useParams<{ deviceId: string }>();
 	const apiClient = useApiClient();
+	const { connected, hubConnection } = useSignalRContext();
 
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
 	const [status, setStatus] = useState<Status>("loading");
 	const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | null>(null)
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
-	const hubConnectionRefObject = useRef<HubConnection>(null);
 	const rtcIceCandidateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
 	const remotePeerConnectionIdRefObject = useRef<string | null>(null);
 	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
@@ -49,7 +50,7 @@ export default function Control() {
 	}, [apiClient, deviceId]);
 
 	useEffect(() => {
-		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current) {
+		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current || !hubConnection) {
 			return;
 		}
 
@@ -69,115 +70,107 @@ export default function Control() {
 			}
 		};
 
-		const startHubConnection = async () => {
-			setStatus("connecting");
+		peerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
+			const localCandidate = rtcPeerConnectionIceEvent.candidate;
+			const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
 
-			hubConnectionRefObject.current = new HubConnectionBuilder()
-				.withUrl("/hubs/web-rtc-hub")
-				.withAutomaticReconnect()
-				.build();
+			if (
+				!localCandidate ||
+				hubConnection.state !== HubConnectionState.Connected ||
+				!remotePeerConnectionId
+			) {
+				return;
+			}
 
-			peerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
-				const localCandidate = rtcPeerConnectionIceEvent.candidate;
-				const hubConnection = hubConnectionRefObject.current;
-				const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
-
-				if (
-					!localCandidate ||
-					!hubConnection ||
-					hubConnection.state !== HubConnectionState.Connected ||
-					!remotePeerConnectionId
-				) {
-					return;
-				}
-
-				await hubConnection.invoke(
-					"SendIceCandidate",
-					deviceId,
-					remotePeerConnectionId,
-					localCandidate.toJSON()
-				);
-			};
-
-			peerConnection.ontrack = (rtcPeerConnectionTrackEvent) => {
-				const mediaStream = rtcPeerConnectionTrackEvent.streams[0];
-				if (htmlVideoElementRefObject.current && mediaStream) {
-					htmlVideoElementRefObject.current.srcObject = mediaStream;
-					void htmlVideoElementRefObject.current.play().catch((reason) => {
-						console.error("Failed to autoplay remote stream", reason);
-					});
-				}
-			};
-
-			hubConnectionRefObject.current.on(
-				"ReceiveOffer",
-				async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
-					remotePeerConnectionIdRefObject.current = connectionId;
-
-					await peerConnection.setRemoteDescription(rtcSessionDescriptionInit);
-
-					const rtcAnswer = await peerConnection.createAnswer();
-					await peerConnection.setLocalDescription(rtcAnswer);
-
-					await hubConnectionRefObject.current!.invoke("SendAnswer", deviceId, connectionId, rtcAnswer);
-					await flushPendingIceCandidates();
-
-					if (!disposed) {
-						setStatus("answer-sent");
-					}
-				}
+			await hubConnection.invoke(
+				"SendIceCandidate",
+				deviceId,
+				remotePeerConnectionId,
+				localCandidate.toJSON()
 			);
+		};
 
-			hubConnectionRefObject.current.on(
-				"ReceiveIceCandidate",
-				async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
-					remotePeerConnectionIdRefObject.current ??= connectionId;
-
-					if (peerConnection.remoteDescription) {
-						await peerConnection.addIceCandidate(rtcIceCandidateInit);
-						return;
-					}
-
-					rtcIceCandidateInitsRefObject.current.push(rtcIceCandidateInit);
-				}
-			);
-
-			peerConnection.onconnectionstatechange = () => {
-				if (!disposed && peerConnection.connectionState === "connected") {
-					setStatus("connected");
-					peerConnection.getStats()
-						.then((x)=> { 
-							x.forEach((report) => {
-								if (report.type === "transport" && report.selectedCandidatePairId !== null){
-									const selectedPair =x.get(report.selectedCandidatePairId);
-
-									const local = x.get(selectedPair.localCandidateId);
-  									const remote = x.get(selectedPair.remoteCandidateId);
-									setRtcWellKnownStats({
-										localCandidateType: local.candidateType,
-										remoteCandidateType: remote.candidateType,
-									});
-								}
-								console.log(report)
-							});
-						});
-				}
-			};
-
-			await hubConnectionRefObject.current.start();
-			await hubConnectionRefObject.current.invoke("JoinDevice", deviceId);
-
-			if (!disposed) {
-				setStatus("waiting-for-offer");
+		peerConnection.ontrack = (rtcPeerConnectionTrackEvent) => {
+			const mediaStream = rtcPeerConnectionTrackEvent.streams[0];
+			if (htmlVideoElementRefObject.current && mediaStream) {
+				htmlVideoElementRefObject.current.srcObject = mediaStream;
+				void htmlVideoElementRefObject.current.play().catch((reason) => {
+					console.error("Failed to autoplay remote stream", reason);
+				});
 			}
 		};
 
-		startHubConnection().catch((reason) => {
-			console.error(reason);
+		hubConnection.on(
+				"ReceiveOffer",
+				async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
+			remotePeerConnectionIdRefObject.current = connectionId;
+
+			await peerConnection.setRemoteDescription(rtcSessionDescriptionInit);
+
+			const rtcAnswer = await peerConnection.createAnswer();
+			await peerConnection.setLocalDescription(rtcAnswer);
+
+			await hubConnection.invoke("SendAnswer", deviceId, connectionId, rtcAnswer);
+			await flushPendingIceCandidates();
+
 			if (!disposed) {
-				setStatus("error");
+				setStatus("answer-sent");
 			}
-		});
+		}
+			);
+
+		hubConnection.on(
+				"ReceiveIceCandidate",
+				async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
+			remotePeerConnectionIdRefObject.current ??= connectionId;
+
+			if (peerConnection.remoteDescription) {
+				await peerConnection.addIceCandidate(rtcIceCandidateInit);
+				return;
+			}
+
+			rtcIceCandidateInitsRefObject.current.push(rtcIceCandidateInit);
+		}
+);
+
+		peerConnection.onconnectionstatechange = () => {
+			if (!disposed && peerConnection.connectionState === "connected") {
+				setStatus("connected");
+				peerConnection.getStats()
+					.then((x)=> { 
+						x.forEach((report) => {
+							if (report.type === "transport" && report.selectedCandidatePairId !== null){
+								const selectedPair =x.get(report.selectedCandidatePairId);
+
+								const local = x.get(selectedPair.localCandidateId);
+									const remote = x.get(selectedPair.remoteCandidateId);
+								setRtcWellKnownStats({
+									localCandidateType: local.candidateType,
+									remoteCandidateType: remote.candidateType,
+								});
+							}
+							console.log(report)
+						});
+					});
+			}
+		};
+
+		if (!connected) {
+			setStatus("connecting");
+		} else {
+			hubConnection.invoke("JoinDevice", deviceId)
+				.then(() => {
+					if (!disposed) {
+						setStatus("waiting-for-offer");
+					}
+				})
+				.catch((reason) => {
+					console.error(reason);
+					if (!disposed) {
+						setStatus("error");
+					}
+				});
+		}
 
 		return () => {
 			disposed = true;
@@ -194,13 +187,8 @@ export default function Control() {
 				peerConnection.onconnectionstatechange = null;
 			} catch { }
 
-			try {
-				hubConnectionRefObject.current?.stop();
-			} catch { }
-
-			hubConnectionRefObject.current = null;
 		};
-	}, [deviceId, rtcConfiguration, rtcPeerConnectionRefObject]);
+	}, [connected, deviceId, hubConnection, rtcConfiguration, rtcPeerConnectionRefObject]);
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
