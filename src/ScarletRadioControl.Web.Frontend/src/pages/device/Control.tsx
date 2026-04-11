@@ -39,6 +39,27 @@ export default function Control() {
 	}, [apiClient, deviceId]);
 
 	useEffect(() => {
+		rtcPeerConnectionRefObject.current!.onconnectionstatechange = () => {
+			if (rtcPeerConnectionRefObject.current!.connectionState === "connected") {
+				rtcPeerConnectionRefObject.current!.getStats()
+					.then((x)=> { 
+						x.forEach((report) => {
+							if (report.type === "transport" && report.selectedCandidatePairId !== null){
+								const selectedPair = x.get(report.selectedCandidatePairId);
+
+								const local = x.get(selectedPair.localCandidateId);
+								const remote = x.get(selectedPair.remoteCandidateId);
+								setRtcWellKnownStats({
+									localCandidateType: local.candidateType,
+									remoteCandidateType: remote.candidateType,
+								});
+							}
+						});
+					});
+				setStatus("connected");
+			}
+		};
+
 		rtcPeerConnectionRefObject.current!.ontrack = (rtcTrackEvent) => {
 			const mediaStream = rtcTrackEvent.streams[0];
 			if (htmlVideoElementRefObject.current !== null && mediaStream !== null) {
@@ -125,28 +146,6 @@ export default function Control() {
 			rtcIceCandidateInitsRefObject.current.push(rtcIceCandidateInit);
 		}
 );
-
-		peerConnection.onconnectionstatechange = () => {
-			if (!disposed && peerConnection.connectionState === "connected") {
-				setStatus("connected");
-				peerConnection.getStats()
-					.then((x)=> { 
-						x.forEach((report) => {
-							if (report.type === "transport" && report.selectedCandidatePairId !== null){
-								const selectedPair =x.get(report.selectedCandidatePairId);
-
-								const local = x.get(selectedPair.localCandidateId);
-									const remote = x.get(selectedPair.remoteCandidateId);
-								setRtcWellKnownStats({
-									localCandidateType: local.candidateType,
-									remoteCandidateType: remote.candidateType,
-								});
-							}
-							console.log(report)
-						});
-					});
-			}
-		};
 
 		if (!connected) {
 			setStatus("connecting");
