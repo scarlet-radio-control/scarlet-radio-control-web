@@ -10,15 +10,15 @@ interface RTCWellKnownStats {
 	remoteCandidateType?: string;
 }
 
-type Status = "loading" | "connecting" | "waiting-for-offer" | "answer-sent" | "connected" | "error";
+type Status = "unknown" | "rtc-configuration-loaded" | "connecting" | "waiting-for-offer" | "answer-sent" | "connected" | "error";
 
 export default function Control() {
-	const { deviceId } = useParams<{ deviceId: string }>();
 	const apiClient = useApiClient();
+	const { deviceId } = useParams<{ deviceId: string }>();
 	const { connected, hubConnection } = useSignalRContext();
 
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
-	const [status, setStatus] = useState<Status>("loading");
+	const [status, setStatus] = useState<Status>( "unknown");
 	const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | null>(null)
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
@@ -30,7 +30,7 @@ export default function Control() {
 		apiClient.current!.api.v1.stun.rtcConfiguration.get()
 			.then(x => {
 				setRtcConfiguration(x as RTCConfiguration);
-				setStatus("loading");
+				setStatus("rtc-configuration-loaded");
 			})
 			.catch(reason=> {
 				console.error(reason);
