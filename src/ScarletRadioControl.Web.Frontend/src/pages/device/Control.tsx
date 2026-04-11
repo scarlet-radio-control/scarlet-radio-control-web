@@ -27,26 +27,15 @@ export default function Control() {
 	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
 
 	useEffect(() => {
-		let cancelled = false;
-
-		const loadRtcConfiguration = async () => {
-			setStatus("loading");
-			const response = await apiClient.current!.api.v1.stun.rtcConfiguration.get();
-			if (!cancelled) {
-				setRtcConfiguration(response as RTCConfiguration);
-			}
-		};
-
-		loadRtcConfiguration().catch((reason) => {
-			console.error(reason);
-			if (!cancelled) {
+		apiClient.current!.api.v1.stun.rtcConfiguration.get()
+			.then(x => {
+				setRtcConfiguration(x as RTCConfiguration);
+				setStatus("loading");
+			})
+			.catch(reason=> {
+				console.error(reason);
 				setStatus("error");
-			}
-		});
-
-		return () => {
-			cancelled = true;
-		};
+			});
 	}, [apiClient, deviceId]);
 
 	useEffect(() => {
