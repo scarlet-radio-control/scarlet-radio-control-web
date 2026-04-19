@@ -67,6 +67,10 @@ export default function Control() {
 			}
 		};
 
+		rtcPeerConnectionRefObject.current.ondatachannel = (rtcDataChannelEvent) => { 
+			console.log(rtcDataChannelEvent.channel);
+		};
+
 		rtcPeerConnectionRefObject.current.onicecandidate = async (rtcPeerConnectionIceEvent) => {
 			const localCandidate = rtcPeerConnectionIceEvent.candidate;
 			const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
