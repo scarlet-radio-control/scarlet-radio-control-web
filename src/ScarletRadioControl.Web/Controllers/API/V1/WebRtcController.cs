@@ -22,15 +22,15 @@ public class WebRtcController : ControllerBase
 		{
 			IceServers = new List<RTCIceServer>
 			{
-				//new RTCIceServer
-				//{
-				//	Credential = null,
-				//	Urls = new List<string>
-				//	{
-				//		"stun:stun.l.google.com:19302"
-				//	},
-				//	Username = null
-				//},
+				new RTCIceServer
+				{
+					Credential = null,
+					Urls = new List<string>
+					{
+						"stun:stun.l.google.com:19302"
+					},
+					Username = null
+				},
 				new RTCIceServer
 				{
 					Credential = null,
