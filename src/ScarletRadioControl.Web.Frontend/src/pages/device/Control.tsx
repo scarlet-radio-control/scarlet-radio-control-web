@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useSignalRContext } from "../../contexts/SignalRContext";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
+import { useGamepad } from "../../hooks/useGamepad";
 
 interface RTCWellKnownStats {
 	localCandidateType?: string;
@@ -13,6 +14,7 @@ type Status = "unknown" | "rtc-configuration-loaded" | "waiting-for-offer" | "an
 
 export default function Control() {
 	const apiClient = useApiClient();
+	const gamepad = useGamepad();
 	const { deviceId } = useParams<{ deviceId: string }>();
 	const { connected, hubConnection } = useSignalRContext();
 
@@ -41,6 +43,7 @@ export default function Control() {
 
 	useEffect(() => {
 		const logGamepadChanges = () => {
+			console.log(gamepad);
 			const gamepads = navigator.getGamepads?.();
 			if (gamepads) {
 				for (const gamepad of gamepads) {
