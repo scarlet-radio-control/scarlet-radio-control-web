@@ -30,7 +30,9 @@ export default function Control() {
 	const previousGamepadsRefObject = useRef<Record<number, { axes: number[]; buttons: number[] }>>({});
 
 	useEffect(() => {
-		apiClient.current!.api.v1.stun.rtcConfiguration.get()
+		if (apiClient === null) { return; }
+
+		apiClient!.api.v1.stun.rtcConfiguration.get()
 			.then(x => {
 				setRtcConfiguration(x as RTCConfiguration);
 				setStatus("rtc-configuration-loaded");
@@ -43,7 +45,6 @@ export default function Control() {
 
 	useEffect(() => {
 		const logGamepadChanges = () => {
-			console.log(gamepad);
 			const gamepads = navigator.getGamepads?.();
 			if (gamepads) {
 				for (const gamepad of gamepads) {

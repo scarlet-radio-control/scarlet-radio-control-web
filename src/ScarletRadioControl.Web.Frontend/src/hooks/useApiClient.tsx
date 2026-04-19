@@ -13,5 +13,5 @@ export default function useApiClient() {
 
         return () => { };
     }, []);
-    return apiClientRefObject;
+    return apiClientRefObject.current;
 }

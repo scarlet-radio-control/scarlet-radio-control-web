@@ -27,7 +27,7 @@ export default function ControlTest() {
 
 		const loadRtcConfiguration = async () => {
 			setStatus("loading");
-			const response = await apiClient.current!.api.v1.stun.rtcConfiguration.get();
+			const response = await apiClient!.api.v1.stun.rtcConfiguration.get();
 			if (!cancelled) {
 				setRtcConfiguration(response as RTCConfiguration);
 			}
