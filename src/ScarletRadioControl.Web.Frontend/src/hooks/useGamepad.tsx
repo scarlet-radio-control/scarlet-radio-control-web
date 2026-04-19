@@ -5,7 +5,7 @@ export const useGamepad = (): Gamepad | undefined => {
 
 	useEffect(() => {
 		const handleGamepadConnected = (gamepadEvent: GamepadEvent) => {
-			if (gamepad === undefined){ return;}
+			if (gamepad !== undefined){ return; }
 			console.log("GamepadConnected", gamepadEvent.gamepad);
 			setGamepad(gamepadEvent.gamepad)
 		};
