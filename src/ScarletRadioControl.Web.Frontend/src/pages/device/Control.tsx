@@ -24,6 +24,8 @@ export default function Control() {
 	const rtcIceCandidateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
 	const remotePeerConnectionIdRefObject = useRef<string | null>(null);
 	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
+	const gamepadPollHandleRefObject = useRef<number | null>(null);
+	const previousGamepadsRefObject = useRef<Record<number, { axes: number[]; buttons: number[] }>>({});
 
 	useEffect(() => {
 		apiClient.current!.api.v1.stun.rtcConfiguration.get()
@@ -36,6 +38,67 @@ export default function Control() {
 				setStatus("error");
 			});
 	}, [apiClient]);
+
+	useEffect(() => {
+		const logGamepadChanges = () => {
+			const gamepads = navigator.getGamepads?.();
+			if (gamepads) {
+				for (const gamepad of gamepads) {
+					if (!gamepad) {
+						continue;
+					}
+
+					const axes = gamepad.axes.map((value) => Number(value.toFixed(4)));
+					const buttons = gamepad.buttons.map((button) => Number(button.value.toFixed(4)));
+					const previous = previousGamepadsRefObject.current[gamepad.index];
+
+					const axisMoved = !previous || axes.some((value, index) => Math.abs(value - (previous.axes[index] ?? 0)) > 0.02);
+					const buttonChanged = !previous || buttons.some((value, index) => value !== (previous.buttons[index] ?? 0));
+
+					if (axisMoved || buttonChanged) {
+						console.log(`Gamepad ${gamepad.index} moved:`, {
+							id: gamepad.id,
+							axes,
+							buttons,
+							connected: gamepad.connected,
+						});
+					}
+
+					previousGamepadsRefObject.current[gamepad.index] = { axes, buttons };
+				}
+			}
+
+			gamepadPollHandleRefObject.current = requestAnimationFrame(logGamepadChanges);
+		};
+
+		const onGamepadConnected = (event: GamepadEvent) => {
+			console.log("Gamepad connected:", event.gamepad.id);
+			previousGamepadsRefObject.current[event.gamepad.index] = {
+				axes: event.gamepad.axes.map((value) => Number(value.toFixed(4))),
+				buttons: event.gamepad.buttons.map((button) => Number(button.value.toFixed(4))),
+			};
+		};
+
+		const onGamepadDisconnected = (event: GamepadEvent) => {
+			console.log("Gamepad disconnected:", event.gamepad.id);
+			delete previousGamepadsRefObject.current[event.gamepad.index];
+		};
+
+		if (typeof navigator.getGamepads === "function") {
+			logGamepadChanges();
+			window.addEventListener("gamepadconnected", onGamepadConnected);
+			window.addEventListener("gamepaddisconnected", onGamepadDisconnected);
+		}
+
+		return () => {
+			if (gamepadPollHandleRefObject.current !== null) {
+				cancelAnimationFrame(gamepadPollHandleRefObject.current);
+				gamepadPollHandleRefObject.current = null;
+			}
+			window.removeEventListener("gamepadconnected", onGamepadConnected);
+			window.removeEventListener("gamepaddisconnected", onGamepadDisconnected);
+		};
+	}, []);
 
 	useEffect(() => {
 		if (rtcPeerConnectionRefObject.current === null) { return; }
