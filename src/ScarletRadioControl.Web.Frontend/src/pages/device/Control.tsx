@@ -1,4 +1,3 @@
-import { HubConnectionState } from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSignalRContext } from "../../contexts/SignalRContext";
@@ -162,12 +161,9 @@ export default function Control() {
 				htmlVideoElementRefObject.current.srcObject = null;
 			}
 
-			try {
-				peerConnection.onicecandidate = null;
-				peerConnection.ontrack = null;
-				peerConnection.onconnectionstatechange = null;
-			} catch { }
-
+			peerConnection.onicecandidate = null;
+			peerConnection.ontrack = null;
+			peerConnection.onconnectionstatechange = null;
 		};
 	}, [connected, deviceId, hubConnection, rtcConfiguration, rtcPeerConnectionRefObject]);
 

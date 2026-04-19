@@ -206,10 +206,8 @@ export default function ControlTest() {
 			rtcIceCandidateInitsRefObject.current = [];
 			remotePeerConnectionIdRefObject.current = null;
 
-			try {
-				peerConnection.onicecandidate = null;
-				peerConnection.onconnectionstatechange = null;
-			} catch { }
+			peerConnection.onicecandidate = null;
+			peerConnection.onconnectionstatechange = null;
 
 			cleanupHubHandlers?.();
 		};
