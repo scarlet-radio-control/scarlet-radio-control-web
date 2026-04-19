@@ -27,6 +27,5 @@ export const useGamepad = (): Gamepad | undefined => {
 			window.removeEventListener("gamepaddisconnected", handleGamepadDisconnected);
 		};
 	}, []);
-
 	return gamepad;
 };
