@@ -125,6 +125,14 @@ export default function ControlTest() {
 
 				remotePeerConnectionIdRefObject.current = connectionId;
 
+				const dataChannel = peerConnection.createDataChannel("gamepad");
+				dataChannel.onmessage = (messageEvent) => {
+					console.log("Message received on data channel:", messageEvent.data);
+				};
+				dataChannel.onopen = () => {
+					console.log("Data channel opened");
+				};
+
 				const rtcOffer = await peerConnection.createOffer();
 				await peerConnection.setLocalDescription(rtcOffer);
 				await hubConnection.invoke("SendOffer", deviceId, connectionId, rtcOffer);
@@ -206,10 +214,8 @@ export default function ControlTest() {
 			rtcIceCandidateInitsRefObject.current = [];
 			remotePeerConnectionIdRefObject.current = null;
 
-			try {
-				peerConnection.onicecandidate = null;
-				peerConnection.onconnectionstatechange = null;
-			} catch { }
+			peerConnection.onicecandidate = null;
+			peerConnection.onconnectionstatechange = null;
 
 			cleanupHubHandlers?.();
 		};

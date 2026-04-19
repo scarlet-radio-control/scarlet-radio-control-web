@@ -12,30 +12,30 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 		await this.Clients.OthersInGroup(deviceId).PeerJoined(this.Context.ConnectionId);
 	}
 
-	public async Task SendOffer(string deviceId, string targetConnectionId, object offer)
+	public async Task SendOffer(string deviceId, string targetConnectionId, object rtcSessionDescriptionInit)
 	{
-		await this.Clients.Client(targetConnectionId).ReceiveOffer(this.Context.ConnectionId, offer);
+		await this.Clients.Client(targetConnectionId).ReceiveOffer(this.Context.ConnectionId, rtcSessionDescriptionInit);
 	}
 
-	public async Task SendAnswer(string deviceId, string targetConnectionId, object answer)
+	public async Task SendAnswer(string deviceId, string targetConnectionId, object rtcSessionDescriptionInit)
 	{
-		await this.Clients.Client(targetConnectionId).ReceiveAnswer(this.Context.ConnectionId, answer);
+		await this.Clients.Client(targetConnectionId).ReceiveAnswer(this.Context.ConnectionId, rtcSessionDescriptionInit);
 	}
 
-	public async Task SendIceCandidate(string deviceId, string targetConnectionId, object candidate)
+	public async Task SendIceCandidate(string deviceId, string targetConnectionId, object rtcIceCandidate)
 	{
-		await this.Clients.Client(targetConnectionId).ReceiveIceCandidate(this.Context.ConnectionId, candidate);
+		await this.Clients.Client(targetConnectionId).ReceiveIceCandidate(this.Context.ConnectionId, rtcIceCandidate);
 	}
 
 	public interface IWebRtcClient
 	{
 		Task PeerJoined(string connectionId);
 
-		Task ReceiveOffer(string fromConnectionId, object offer);
+		Task ReceiveOffer(string fromConnectionId, object rtcSessionDescriptionInit);
 
-		Task ReceiveAnswer(string fromConnectionId, object answer);
+		Task ReceiveAnswer(string fromConnectionId, object rtcSessionDescriptionInit);
 
-		Task ReceiveIceCandidate(string fromConnectionId, object candidate);
+		Task ReceiveIceCandidate(string fromConnectionId, object rtcIceCandidate);
 	}
 
 }
