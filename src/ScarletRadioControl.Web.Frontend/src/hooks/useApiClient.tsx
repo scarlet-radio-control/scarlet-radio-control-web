@@ -4,7 +4,7 @@ import { useRef, useEffect } from "react";
 import { createApiClient, type ApiClient } from "../kiota/output/apiClient";
 
 export default function useApiClient() {
-    const apiClientRefObject = useRef<ApiClient>(null);
+    const apiClientRefObject = useRef<ApiClient>(undefined);
 
     useEffect(() => {    
         const anonymousAuthenticationProvider = new AnonymousAuthenticationProvider();

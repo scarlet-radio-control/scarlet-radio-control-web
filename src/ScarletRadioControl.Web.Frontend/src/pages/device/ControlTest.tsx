@@ -6,7 +6,7 @@ import { useSignalRContext } from "../../contexts/SignalRContext";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
 
-type Status = "loading" | "ready" | "connecting" | "waiting-for-receiver" | "offer-sent" | "connected" | "error";
+type Status = "unknown" | "rtc-configuration-loaded" | "ready" | "connecting" | "waiting-for-receiver" | "offer-sent" | "connected" | "error";
 
 export default function ControlTest() {
 	const apiClient = useApiClient();
@@ -14,13 +14,27 @@ export default function ControlTest() {
 	const { connected, hubConnection } = useSignalRContext();
 
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
-	const [status, setStatus] = useState<Status>("loading");
+	const [status, setStatus] = useState<Status>("unknown");
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
 	const rtcIceCandidateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
 	const remotePeerConnectionIdRefObject = useRef<string | null>(null);
 	const tracksAddedRefObject = useRef(false);
 	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
+
+	useEffect(() => {
+		if (apiClient === undefined) { return; }
+
+		apiClient!.api.v1.stun.rtcConfiguration.get()
+			.then(x => {
+				setRtcConfiguration(x as RTCConfiguration);
+				setStatus("rtc-configuration-loaded");
+			})
+			.catch(reason => {
+				console.error(reason);
+				setStatus("error");
+			});
+	}, [apiClient]);
 
 	useEffect(() => {
 		let cancelled = false;
