@@ -40,7 +40,7 @@ export default function ControlTest() {
 		let cancelled = false;
 
 		const loadRtcConfiguration = async () => {
-			setStatus("loading");
+			setStatus("rtc-configuration-loaded");
 			const response = await apiClient!.api.v1.stun.rtcConfiguration.get();
 			if (!cancelled) {
 				setRtcConfiguration(response as RTCConfiguration);
@@ -243,7 +243,7 @@ export default function ControlTest() {
 		let cancelled = false;
 
 		if (!connected) {
-			setStatus((currentStatus) => currentStatus === "loading" ? currentStatus : "connecting");
+			setStatus((currentStatus) => currentStatus === "unknown" ? currentStatus : "connecting");
 			return () => {
 				cancelled = true;
 			};
