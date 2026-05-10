@@ -4,15 +4,22 @@ import { useParams } from "react-router-dom";
 import countdown from "../../assets/countdown.mp4";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
+import { useSignalRContext } from "../../contexts/SignalRContext";
 
-type Status = "loading" | "ready" | "connecting" | "waiting-for-receiver" | "offer-sent" | "connected" | "error";
+interface RTCWellKnownStats {
+	localCandidateType?: string;
+	remoteCandidateType?: string;
+}
+
+type Status = "unknown" | "rtc-connection-loaded" |"signal-r-loaded" | "loading" | "ready" | "connecting" | "waiting-for-receiver" | "offer-sent" | "connected" | "error";
 
 export default function ControlTest() {
 	const apiClient = useApiClient();
 	const { deviceId } = useParams<{ deviceId: string }>();
+	const {connected, hubConnection}= useSignalRContext();
 
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
-	const [status, setStatus] = useState<Status>("loading");
+	const [status, setStatus] = useState<Status>("unknown");
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
 	const hubConnectionRefObject = useRef<HubConnection>(null);
@@ -22,27 +29,31 @@ export default function ControlTest() {
 	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
 
 	useEffect(() => {
-		let cancelled = false;
+		if (!apiClient) { return; }
 
-		const loadRtcConfiguration = async () => {
-			setStatus("loading");
-			const response = await apiClient!.api.v1.stun.rtcConfiguration.get();
-			if (!cancelled) {
+		apiClient!.api.v1.stun.rtcConfiguration.get()
+			.then((response) => {
 				setRtcConfiguration(response as RTCConfiguration);
+				setStatus("rtc-connection-loaded");
 			}
-		};
-
-		loadRtcConfiguration().catch((reason) => {
-			console.error(reason);
-			if (!cancelled) {
-				setStatus("error");
-			}
+		).catch((reason) => {
+			console.error(reason); 
+			setStatus("error"); 
 		});
 
-		return () => {
-			cancelled = true;
-		};
-	}, [apiClient, deviceId]);
+		return () => {};
+	}, [apiClient]);
+
+	useEffect(() => {
+		if (!hubConnection) { return; }
+
+		hubConnection.on("ClientJoined", async (connectionId: string) => {
+			console.log(`Client joined with connection id ${connectionId}`);
+		});
+		setStatus("signal-r-loaded");
+		
+		return () => {};
+	}, [connected, hubConnection]);
 
 	useEffect(() => {
 		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current || !htmlVideoElementRefObject.current) {

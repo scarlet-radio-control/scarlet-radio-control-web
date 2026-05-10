@@ -3,17 +3,19 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
+import { useSignalRContext } from "../../contexts/SignalRContext";
 
 interface RTCWellKnownStats {
 	localCandidateType?: string;
 	remoteCandidateType?: string;
 }
 
-type Status = "loading" | "connecting" | "waiting-for-offer" | "answer-sent" | "connected" | "error";
+type Status = "unknown" | "rtc-connection-loaded" | "signal-r-loaded" | "loading" | "connecting" | "waiting-for-offer" | "answer-sent" | "connected" | "error";
 
 export default function Control() {
-	const { deviceId } = useParams<{ deviceId: string }>();
 	const apiClient = useApiClient();
+	const { deviceId } = useParams<{ deviceId: string }>();
+	const {connected, hubConnection}= useSignalRContext();
 
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
 	const [status, setStatus] = useState<Status>("loading");
@@ -26,27 +28,31 @@ export default function Control() {
 	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
 
 	useEffect(() => {
-		let cancelled = false;
+		if (!apiClient) { return; }
 
-		const loadRtcConfiguration = async () => {
-			setStatus("loading");
-			const response = await apiClient!.api.v1.stun.rtcConfiguration.get();
-			if (!cancelled) {
+		apiClient!.api.v1.stun.rtcConfiguration.get()
+			.then((response) => {
 				setRtcConfiguration(response as RTCConfiguration);
+				setStatus("rtc-connection-loaded");
 			}
-		};
-
-		loadRtcConfiguration().catch((reason) => {
-			console.error(reason);
-			if (!cancelled) {
-				setStatus("error");
-			}
+		).catch((reason) => {
+			console.error(reason); 
+			setStatus("error"); 
 		});
 
-		return () => {
-			cancelled = true;
-		};
-	}, [apiClient, deviceId]);
+		return () => {};
+	}, [apiClient]);
+
+	useEffect(() => {
+		if (!hubConnection) { return; }
+
+		hubConnection.on("DeviceJoined", async (connectionId: string) => {
+			console.log(`Device joined with connection id ${connectionId}`);
+		});
+		setStatus("signal-r-loaded");
+		
+		return () => {};
+	}, [connected, hubConnection]);
 
 	useEffect(() => {
 		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current) {
@@ -109,8 +115,7 @@ export default function Control() {
 				}
 			};
 
-			hubConnectionRefObject.current.on(
-				"ReceiveOffer",
+			hubConnectionRefObject.current.on("ReceiveOffer",
 				async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
 					remotePeerConnectionIdRefObject.current = connectionId;
 
