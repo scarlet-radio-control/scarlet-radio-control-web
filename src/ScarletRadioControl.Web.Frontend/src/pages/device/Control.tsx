@@ -24,7 +24,7 @@ export default function Control() {
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
 	const rtcIceCandidateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
 	const remotePeerConnectionIdRefObject = useRef<string | null>(null);
-	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
+	const rtcPeerConnection = useRtcPeerConnection(rtcConfiguration);
 
 	useEffect(() => {
 		if (!apiClient) { return; }
@@ -56,15 +56,14 @@ export default function Control() {
 	useEffect(() => {
 		if (!connected || !hubConnection) { return; }
 
-		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject) {
+		if (!deviceId || !rtcConfiguration || !rtcPeerConnection) {
 			return;
 		}
 
 		let disposed = false;
-		const peerConnection = rtcPeerConnectionRefObject;
 
 		const flushPendingIceCandidates = async () => {
-			if (!peerConnection.remoteDescription) {
+			if (!rtcPeerConnection.remoteDescription) {
 				return;
 			}
 
@@ -72,14 +71,14 @@ export default function Control() {
 			rtcIceCandidateInitsRefObject.current = [];
 
 			for (const queuedCandidate of queuedCandidates) {
-				await peerConnection.addIceCandidate(queuedCandidate);
+				await rtcPeerConnection.addIceCandidate(queuedCandidate);
 			}
 		};
 
 		const startHubConnection = async () => {
 			setStatus("connecting");
 
-			peerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
+			rtcPeerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
 				const localCandidate = rtcPeerConnectionIceEvent.candidate;
 				const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
 
@@ -100,7 +99,7 @@ export default function Control() {
 				);
 			};
 
-			peerConnection.ontrack = (rtcPeerConnectionTrackEvent) => {
+			rtcPeerConnection.ontrack = (rtcPeerConnectionTrackEvent) => {
 				const mediaStream = rtcPeerConnectionTrackEvent.streams[0];
 				if (htmlVideoElementRefObject.current && mediaStream) {
 					htmlVideoElementRefObject.current.srcObject = mediaStream;
@@ -113,10 +112,10 @@ export default function Control() {
 			hubConnection.on("ReceiveOffer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
 					remotePeerConnectionIdRefObject.current = connectionId;
 
-					await peerConnection.setRemoteDescription(rtcSessionDescriptionInit);
+					await rtcPeerConnection.setRemoteDescription(rtcSessionDescriptionInit);
 
-					const rtcAnswer = await peerConnection.createAnswer();
-					await peerConnection.setLocalDescription(rtcAnswer);
+					const rtcAnswer = await rtcPeerConnection.createAnswer();
+					await rtcPeerConnection.setLocalDescription(rtcAnswer);
 
 					await hubConnection!.invoke("SendAnswer", deviceId, connectionId, rtcAnswer);
 					await flushPendingIceCandidates();
@@ -130,8 +129,8 @@ export default function Control() {
 			hubConnection.on("ReceiveIceCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
 					remotePeerConnectionIdRefObject.current ??= connectionId;
 
-					if (peerConnection.remoteDescription) {
-						await peerConnection.addIceCandidate(rtcIceCandidateInit);
+					if (rtcPeerConnection.remoteDescription) {
+						await rtcPeerConnection.addIceCandidate(rtcIceCandidateInit);
 						return;
 					}
 
@@ -139,10 +138,10 @@ export default function Control() {
 				}
 			);
 
-			peerConnection.onconnectionstatechange = () => {
-				if (!disposed && peerConnection.connectionState === "connected") {
+			rtcPeerConnection.onconnectionstatechange = () => {
+				if (!disposed && rtcPeerConnection.connectionState === "connected") {
 					setStatus("connected");
-					peerConnection.getStats()
+					rtcPeerConnection.getStats()
 						.then((x)=> { 
 							x.forEach((report) => {
 								if (report.type === "transport" && report.selectedCandidatePairId !== null){
@@ -185,12 +184,12 @@ export default function Control() {
 			}
 
 			try {
-				peerConnection.onicecandidate = null;
-				peerConnection.ontrack = null;
-				peerConnection.onconnectionstatechange = null;
+				rtcPeerConnection.onicecandidate = null;
+				rtcPeerConnection.ontrack = null;
+				rtcPeerConnection.onconnectionstatechange = null;
 			} catch { }
 		};
-	}, [connected, deviceId, hubConnection, rtcConfiguration, rtcPeerConnectionRefObject]);
+	}, [connected, deviceId, hubConnection, rtcConfiguration, rtcPeerConnection]);
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>

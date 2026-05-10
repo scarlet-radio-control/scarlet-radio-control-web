@@ -26,7 +26,7 @@ export default function ControlTest() {
 	const rtcIceCandidateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
 	const remotePeerConnectionIdRefObject = useRef<string | null>(null);
 	const tracksAddedRefObject = useRef(false);
-	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
+	const rtcPeerConnection = useRtcPeerConnection(rtcConfiguration);
 
 	useEffect(() => {
 		if (!apiClient) { return; }
@@ -58,12 +58,11 @@ export default function ControlTest() {
 	useEffect(() => {
 		if (!connected || !hubConnection) { return; }
 
-		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject || !htmlVideoElementRefObject.current) {
+		if (!deviceId || !rtcConfiguration || !rtcPeerConnection || !htmlVideoElementRefObject.current) {
 			return;
 		}
 
 		let disposed = false;
-		const peerConnection = rtcPeerConnectionRefObject;
 		const htmlVideoElement = htmlVideoElementRefObject.current;
 
 		const ensureLocalTracks = async () => {
@@ -78,14 +77,14 @@ export default function ControlTest() {
 
 			const mediaStream = (htmlVideoElement as HTMLVideoElement & { captureStream(): MediaStream }).captureStream();
 			for (const mediaStreamTrack of mediaStream.getVideoTracks()) {
-				peerConnection.addTrack(mediaStreamTrack, mediaStream);
+				rtcPeerConnection.addTrack(mediaStreamTrack, mediaStream);
 			}
 
 			tracksAddedRefObject.current = true;
 		};
 
 		const flushPendingIceCandidates = async () => {
-			if (!peerConnection.remoteDescription) {
+			if (!rtcPeerConnection.remoteDescription) {
 				return;
 			}
 
@@ -93,7 +92,7 @@ export default function ControlTest() {
 			rtcIceCandidateInitsRefObject.current = [];
 
 			for (const queuedCandidate of queuedCandidates) {
-				await peerConnection.addIceCandidate(queuedCandidate);
+				await rtcPeerConnection.addIceCandidate(queuedCandidate);
 			}
 		};
 
@@ -101,7 +100,7 @@ export default function ControlTest() {
 			await ensureLocalTracks();
 			setStatus("connecting");
 
-			peerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
+			rtcPeerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
 				const localCandidate = rtcPeerConnectionIceEvent.candidate;
 				const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
 
@@ -122,8 +121,8 @@ export default function ControlTest() {
 				);
 			};
 
-			peerConnection.onconnectionstatechange = () => {
-				if (!disposed && peerConnection.connectionState === "connected") {
+			rtcPeerConnection.onconnectionstatechange = () => {
+				if (!disposed && rtcPeerConnection.connectionState === "connected") {
 					setStatus("connected");
 				}
 			};
@@ -135,8 +134,8 @@ export default function ControlTest() {
 
 				remotePeerConnectionIdRefObject.current = connectionId;
 
-				const rtcOffer = await peerConnection.createOffer();
-				await peerConnection.setLocalDescription(rtcOffer);
+				const rtcOffer = await rtcPeerConnection.createOffer();
+				await rtcPeerConnection.setLocalDescription(rtcOffer);
 				await hubConnection.invoke("SendOffer", deviceId, connectionId, rtcOffer);
 
 				if (!disposed) {
@@ -147,7 +146,7 @@ export default function ControlTest() {
 			hubConnection.on("ReceiveAnswer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
 					remotePeerConnectionIdRefObject.current ??= connectionId;
 
-					await peerConnection.setRemoteDescription(rtcSessionDescriptionInit);
+					await rtcPeerConnection.setRemoteDescription(rtcSessionDescriptionInit);
 					await flushPendingIceCandidates();
 
 					if (!disposed) {
@@ -159,8 +158,8 @@ export default function ControlTest() {
 			hubConnection.on("ReceiveIceCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
 					remotePeerConnectionIdRefObject.current ??= connectionId;
 
-					if (peerConnection.remoteDescription) {
-						await peerConnection.addIceCandidate(rtcIceCandidateInit);
+					if (rtcPeerConnection.remoteDescription) {
+						await rtcPeerConnection.addIceCandidate(rtcIceCandidateInit);
 						return;
 					}
 
@@ -209,11 +208,11 @@ export default function ControlTest() {
 			tracksAddedRefObject.current = false;
 
 			try {
-				peerConnection.onicecandidate = null;
-				peerConnection.onconnectionstatechange = null;
+				rtcPeerConnection.onicecandidate = null;
+				rtcPeerConnection.onconnectionstatechange = null;
 			} catch { }
 		};
-	}, [connected, deviceId, hubConnection, rtcConfiguration, rtcPeerConnectionRefObject]);
+	}, [connected, deviceId, hubConnection, rtcConfiguration, rtcPeerConnection]);
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>

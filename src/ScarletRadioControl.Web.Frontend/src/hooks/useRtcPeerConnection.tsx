@@ -8,7 +8,9 @@ export default function useRtcPeerConnection(rtcConfiguration: RTCConfiguration 
         setRtcPeerConnection(newRtcPeerConnection);
 
         return () => {
-            newRtcPeerConnection.close();
+            if (!rtcPeerConnection) { return; }
+
+            rtcPeerConnection.close();
             setRtcPeerConnection(undefined);
         };
     }, [rtcConfiguration]);
