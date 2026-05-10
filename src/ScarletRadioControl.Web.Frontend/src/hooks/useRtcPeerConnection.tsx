@@ -1,15 +1,16 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export default function useRtcPeerConnection(rtcConfiguration: RTCConfiguration | null) {
-    const rtcPeerConnectionRefObject = useRef<RTCPeerConnection>(null);
+export default function useRtcPeerConnection(rtcConfiguration: RTCConfiguration | undefined) {
+    const [rtcPeerConnection, setRtcPeerConnection] = useState<RTCPeerConnection | undefined>(undefined);
 
     useEffect(() => {
-        rtcPeerConnectionRefObject.current = new RTCPeerConnection(rtcConfiguration ?? undefined);
+        const newRtcPeerConnection = new RTCPeerConnection(rtcConfiguration ?? undefined);
+        setRtcPeerConnection(newRtcPeerConnection);
 
         return () => {
-            rtcPeerConnectionRefObject.current?.close();
-            rtcPeerConnectionRefObject.current = null;
+            newRtcPeerConnection.close();
+            setRtcPeerConnection(undefined);
         };
     }, [rtcConfiguration]);
-    return rtcPeerConnectionRefObject;
+    return rtcPeerConnection;
 }

@@ -18,8 +18,9 @@ export default function ControlTest() {
 	const { deviceId } = useParams<{ deviceId: string }>();
 	const {connected, hubConnection}= useSignalRContext();
 
-	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
+	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | undefined>(undefined);
 	const [status, setStatus] = useState<Status>("unknown");
+	//const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | undefined>(undefined);
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
 	const rtcIceCandidateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
@@ -57,12 +58,12 @@ export default function ControlTest() {
 	useEffect(() => {
 		if (!connected || !hubConnection) { return; }
 
-		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current || !htmlVideoElementRefObject.current) {
+		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject || !htmlVideoElementRefObject.current) {
 			return;
 		}
 
 		let disposed = false;
-		const peerConnection = rtcPeerConnectionRefObject.current;
+		const peerConnection = rtcPeerConnectionRefObject;
 		const htmlVideoElement = htmlVideoElementRefObject.current;
 
 		const ensureLocalTracks = async () => {

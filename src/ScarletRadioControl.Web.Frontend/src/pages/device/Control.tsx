@@ -17,9 +17,9 @@ export default function Control() {
 	const { deviceId } = useParams<{ deviceId: string }>();
 	const {connected, hubConnection}= useSignalRContext();
 
-	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | null>(null);
-	const [status, setStatus] = useState<Status>("loading");
-	const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | null>(null)
+	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | undefined>(undefined);
+	const [status, setStatus] = useState<Status>("unknown");
+	const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | undefined>(undefined);
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
 	const rtcIceCandidateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
@@ -56,12 +56,12 @@ export default function Control() {
 	useEffect(() => {
 		if (!connected || !hubConnection) { return; }
 
-		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current) {
+		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject) {
 			return;
 		}
 
 		let disposed = false;
-		const peerConnection = rtcPeerConnectionRefObject.current;
+		const peerConnection = rtcPeerConnectionRefObject;
 
 		const flushPendingIceCandidates = async () => {
 			if (!peerConnection.remoteDescription) {
