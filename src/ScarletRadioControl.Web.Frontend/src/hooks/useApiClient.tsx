@@ -12,7 +12,7 @@ export default function useApiClient() {
         const newApiClient = createApiClient(fetchRequestAdapter);
         setApiClient(newApiClient);
 
-        return () => { };
+        return () => {};
     }, []);
     return apiClient;
 }
