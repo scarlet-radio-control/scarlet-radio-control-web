@@ -121,7 +121,7 @@ export default function ControlTest() {
 				}
 			};
 
-			hubConnectionRefObject.current.on("PeerJoined", async (connectionId: string) => {
+			hubConnectionRefObject.current.on("ClientJoined", async (connectionId: string) => {
 				if (remotePeerConnectionIdRefObject.current === connectionId) {
 					return;
 				}
@@ -166,7 +166,7 @@ export default function ControlTest() {
 			);
 
 			await hubConnectionRefObject.current.start();
-			await hubConnectionRefObject.current.invoke("JoinDevice", deviceId);
+			await hubConnectionRefObject.current.invoke("JoinAsDevice", deviceId);
 
 			if (!disposed) {
 				setStatus("waiting-for-receiver");

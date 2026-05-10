@@ -165,7 +165,7 @@ export default function Control() {
 			};
 
 			await hubConnectionRefObject.current.start();
-			await hubConnectionRefObject.current.invoke("JoinDevice", deviceId);
+			await hubConnectionRefObject.current.invoke("JoinAsClient", deviceId);
 
 			if (!disposed) {
 				setStatus("waiting-for-offer");
