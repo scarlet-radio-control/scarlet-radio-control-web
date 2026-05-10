@@ -45,7 +45,7 @@ export default function ControlTest() {
 	}, [apiClient]);
 
 	useEffect(() => {
-		if (!hubConnection) { return; }
+		if (connected || !hubConnection) { return; }
 
 		hubConnection.on("ClientJoined", async (connectionId: string) => {
 			console.log(`Client joined with connection id ${connectionId}`);
@@ -53,7 +53,7 @@ export default function ControlTest() {
 		setStatus("signal-r-loaded");
 		
 		return () => {};
-	}, [hubConnection]);
+	}, [connected, hubConnection]);
 
 	useEffect(() => {
 		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current || !htmlVideoElementRefObject.current) {

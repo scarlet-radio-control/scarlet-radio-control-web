@@ -44,7 +44,7 @@ export default function Control() {
 	}, [apiClient]);
 
 	useEffect(() => {
-		if (!hubConnection) { return; }
+		if (connected || !hubConnection) { return; }
 
 		hubConnection.on("DeviceJoined", async (connectionId: string) => {
 			console.log(`Device joined with connection id ${connectionId}`);
@@ -52,7 +52,7 @@ export default function Control() {
 		setStatus("signal-r-loaded");
 		
 		return () => {};
-	}, [hubConnection]);
+	}, [connected, hubConnection]);
 
 	useEffect(() => {
 		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current) {
