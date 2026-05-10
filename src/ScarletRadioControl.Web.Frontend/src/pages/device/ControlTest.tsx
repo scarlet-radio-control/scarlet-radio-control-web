@@ -5,10 +5,10 @@ import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
 import { useSignalRContext } from "../../contexts/SignalRContext";
 
-//interface RTCWellKnownStats {
-//	localCandidateType?: string;
-//	remoteCandidateType?: string;
-//}
+interface RTCWellKnownStats {
+	localCandidateType?: string;
+	remoteCandidateType?: string;
+}
 
 type Status = "unknown" | "rtc-connection-loaded" |"signal-r-loaded" | "loading" | "ready" | "connecting" | "waiting-for-receiver" | "offer-sent" | "connected" | "error";
 
@@ -19,7 +19,7 @@ export default function ControlTest() {
 
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | undefined>(undefined);
 	const [status, setStatus] = useState<Status>("unknown");
-	//const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | undefined>(undefined);
+	const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | undefined>(undefined);
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
 	const rtcIceCandidateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
@@ -102,6 +102,19 @@ export default function ControlTest() {
 
 		rtcPeerConnection.onconnectionstatechange = () => {
 			if (rtcPeerConnection.connectionState !== "connected") { return; }
+
+			rtcPeerConnection.getStats()
+				.then((x)=> { 
+					x.forEach((report) => {
+						if (report.type === "transport" && report.selectedCandidatePairId !== null){
+							const selectedPair = x.get(report.selectedCandidatePairId);
+							const local = x.get(selectedPair.localCandidateId);
+							const remote = x.get(selectedPair.remoteCandidateId);
+							setRtcWellKnownStats({ localCandidateType: local.candidateType, remoteCandidateType: remote.candidateType });
+						}
+						console.log(report)
+					});
+				});
 
 			setStatus("connected");
 		};
@@ -199,7 +212,7 @@ export default function ControlTest() {
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
-			<p style={{ margin: "1rem" }}>Id: {deviceId} - Status: {status} - Mode: sender</p>
+			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Local Candidate Type: {rtcWellKnownStats?.localCandidateType} - Remote Candidate Type: {rtcWellKnownStats?.remoteCandidateType}</p>
 			<video
 				autoPlay
 				loop
