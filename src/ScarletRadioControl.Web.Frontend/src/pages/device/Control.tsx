@@ -52,7 +52,7 @@ export default function Control() {
 		setStatus("signal-r-loaded");
 		
 		return () => {};
-	}, [connected, hubConnection]);
+	}, [hubConnection]);
 
 	useEffect(() => {
 		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current) {

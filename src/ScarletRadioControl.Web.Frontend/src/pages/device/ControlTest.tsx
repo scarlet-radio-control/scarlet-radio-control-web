@@ -53,7 +53,7 @@ export default function ControlTest() {
 		setStatus("signal-r-loaded");
 		
 		return () => {};
-	}, [connected, hubConnection]);
+	}, [hubConnection]);
 
 	useEffect(() => {
 		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current || !htmlVideoElementRefObject.current) {
