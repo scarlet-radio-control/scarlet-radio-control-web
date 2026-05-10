@@ -1,4 +1,4 @@
-import { HubConnectionBuilder, HubConnectionState, type HubConnection } from "@microsoft/signalr";
+import { HubConnectionState } from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import countdown from "../../assets/countdown.mp4";
@@ -6,10 +6,10 @@ import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
 import { useSignalRContext } from "../../contexts/SignalRContext";
 
-interface RTCWellKnownStats {
-	localCandidateType?: string;
-	remoteCandidateType?: string;
-}
+//interface RTCWellKnownStats {
+//	localCandidateType?: string;
+//	remoteCandidateType?: string;
+//}
 
 type Status = "unknown" | "rtc-connection-loaded" |"signal-r-loaded" | "loading" | "ready" | "connecting" | "waiting-for-receiver" | "offer-sent" | "connected" | "error";
 
@@ -22,7 +22,6 @@ export default function ControlTest() {
 	const [status, setStatus] = useState<Status>("unknown");
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
-	const hubConnectionRefObject = useRef<HubConnection>(null);
 	const rtcIceCandidateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
 	const remotePeerConnectionIdRefObject = useRef<string | null>(null);
 	const tracksAddedRefObject = useRef(false);
@@ -45,7 +44,7 @@ export default function ControlTest() {
 	}, [apiClient]);
 
 	useEffect(() => {
-		if (connected || !hubConnection) { return; }
+		if (!connected || !hubConnection) { return; }
 
 		hubConnection.on("ClientJoined", async (connectionId: string) => {
 			console.log(`Client joined with connection id ${connectionId}`);
@@ -56,6 +55,8 @@ export default function ControlTest() {
 	}, [connected, hubConnection]);
 
 	useEffect(() => {
+		if (!connected || !hubConnection) { return; }
+
 		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current || !htmlVideoElementRefObject.current) {
 			return;
 		}
@@ -99,14 +100,8 @@ export default function ControlTest() {
 			await ensureLocalTracks();
 			setStatus("connecting");
 
-			hubConnectionRefObject.current = new HubConnectionBuilder()
-				.withUrl("/hubs/web-rtc-hub")
-				.withAutomaticReconnect()
-				.build();
-
 			peerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
 				const localCandidate = rtcPeerConnectionIceEvent.candidate;
-				const hubConnection = hubConnectionRefObject.current;
 				const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
 
 				if (
@@ -132,7 +127,7 @@ export default function ControlTest() {
 				}
 			};
 
-			hubConnectionRefObject.current.on("ClientJoined", async (connectionId: string) => {
+			hubConnection.on("ClientJoined", async (connectionId: string) => {
 				if (remotePeerConnectionIdRefObject.current === connectionId) {
 					return;
 				}
@@ -141,16 +136,14 @@ export default function ControlTest() {
 
 				const rtcOffer = await peerConnection.createOffer();
 				await peerConnection.setLocalDescription(rtcOffer);
-				await hubConnectionRefObject.current!.invoke("SendOffer", deviceId, connectionId, rtcOffer);
+				await hubConnection.invoke("SendOffer", deviceId, connectionId, rtcOffer);
 
 				if (!disposed) {
 					setStatus("offer-sent");
 				}
 			});
 
-			hubConnectionRefObject.current.on(
-				"ReceiveAnswer",
-				async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
+			hubConnection.on("ReceiveAnswer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
 					remotePeerConnectionIdRefObject.current ??= connectionId;
 
 					await peerConnection.setRemoteDescription(rtcSessionDescriptionInit);
@@ -162,9 +155,7 @@ export default function ControlTest() {
 				}
 			);
 
-			hubConnectionRefObject.current.on(
-				"ReceiveIceCandidate",
-				async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
+			hubConnection.on("ReceiveIceCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
 					remotePeerConnectionIdRefObject.current ??= connectionId;
 
 					if (peerConnection.remoteDescription) {
@@ -176,8 +167,7 @@ export default function ControlTest() {
 				}
 			);
 
-			await hubConnectionRefObject.current.start();
-			await hubConnectionRefObject.current.invoke("JoinAsDevice", deviceId);
+			await hubConnection.invoke("JoinAsDevice", deviceId);
 
 			if (!disposed) {
 				setStatus("waiting-for-receiver");
@@ -221,14 +211,8 @@ export default function ControlTest() {
 				peerConnection.onicecandidate = null;
 				peerConnection.onconnectionstatechange = null;
 			} catch { }
-
-			try {
-				hubConnectionRefObject.current?.stop();
-			} catch { }
-
-			hubConnectionRefObject.current = null;
 		};
-	}, [deviceId, rtcConfiguration, rtcPeerConnectionRefObject]);
+	}, [connected, deviceId, hubConnection, rtcConfiguration, rtcPeerConnectionRefObject]);
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>

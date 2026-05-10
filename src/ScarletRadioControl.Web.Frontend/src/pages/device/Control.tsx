@@ -1,4 +1,4 @@
-import { HubConnectionBuilder, HubConnectionState, type HubConnection } from "@microsoft/signalr";
+import { HubConnectionState } from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import useApiClient from "../../hooks/useApiClient";
@@ -22,7 +22,6 @@ export default function Control() {
 	const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | null>(null)
 
 	const htmlVideoElementRefObject = useRef<HTMLVideoElement>(null);
-	const hubConnectionRefObject = useRef<HubConnection>(null);
 	const rtcIceCandidateInitsRefObject = useRef<RTCIceCandidateInit[]>([]);
 	const remotePeerConnectionIdRefObject = useRef<string | null>(null);
 	const rtcPeerConnectionRefObject = useRtcPeerConnection(rtcConfiguration);
@@ -44,7 +43,7 @@ export default function Control() {
 	}, [apiClient]);
 
 	useEffect(() => {
-		if (connected || !hubConnection) { return; }
+		if (!connected || !hubConnection) { return; }
 
 		hubConnection.on("DeviceJoined", async (connectionId: string) => {
 			console.log(`Device joined with connection id ${connectionId}`);
@@ -55,6 +54,8 @@ export default function Control() {
 	}, [connected, hubConnection]);
 
 	useEffect(() => {
+		if (!connected || !hubConnection) { return; }
+
 		if (!deviceId || !rtcConfiguration || !rtcPeerConnectionRefObject.current) {
 			return;
 		}
@@ -78,14 +79,8 @@ export default function Control() {
 		const startHubConnection = async () => {
 			setStatus("connecting");
 
-			hubConnectionRefObject.current = new HubConnectionBuilder()
-				.withUrl("/hubs/web-rtc-hub")
-				.withAutomaticReconnect()
-				.build();
-
 			peerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
 				const localCandidate = rtcPeerConnectionIceEvent.candidate;
-				const hubConnection = hubConnectionRefObject.current;
 				const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
 
 				if (
@@ -115,8 +110,7 @@ export default function Control() {
 				}
 			};
 
-			hubConnectionRefObject.current.on("ReceiveOffer",
-				async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
+			hubConnection.on("ReceiveOffer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
 					remotePeerConnectionIdRefObject.current = connectionId;
 
 					await peerConnection.setRemoteDescription(rtcSessionDescriptionInit);
@@ -124,7 +118,7 @@ export default function Control() {
 					const rtcAnswer = await peerConnection.createAnswer();
 					await peerConnection.setLocalDescription(rtcAnswer);
 
-					await hubConnectionRefObject.current!.invoke("SendAnswer", deviceId, connectionId, rtcAnswer);
+					await hubConnection!.invoke("SendAnswer", deviceId, connectionId, rtcAnswer);
 					await flushPendingIceCandidates();
 
 					if (!disposed) {
@@ -133,9 +127,7 @@ export default function Control() {
 				}
 			);
 
-			hubConnectionRefObject.current.on(
-				"ReceiveIceCandidate",
-				async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
+			hubConnection.on("ReceiveIceCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
 					remotePeerConnectionIdRefObject.current ??= connectionId;
 
 					if (peerConnection.remoteDescription) {
@@ -169,8 +161,7 @@ export default function Control() {
 				}
 			};
 
-			await hubConnectionRefObject.current.start();
-			await hubConnectionRefObject.current.invoke("JoinAsClient", deviceId);
+			await hubConnection.invoke("JoinAsClient", deviceId);
 
 			if (!disposed) {
 				setStatus("waiting-for-offer");
@@ -198,14 +189,8 @@ export default function Control() {
 				peerConnection.ontrack = null;
 				peerConnection.onconnectionstatechange = null;
 			} catch { }
-
-			try {
-				hubConnectionRefObject.current?.stop();
-			} catch { }
-
-			hubConnectionRefObject.current = null;
 		};
-	}, [deviceId, rtcConfiguration, rtcPeerConnectionRefObject]);
+	}, [connected, deviceId, hubConnection, rtcConfiguration, rtcPeerConnectionRefObject]);
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
