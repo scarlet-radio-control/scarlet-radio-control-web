@@ -31,7 +31,7 @@ export default function ControlTest() {
 	useEffect(() => {
 		if (!apiClient) { return; }
 
-		apiClient!.api.v1.stun.rtcConfiguration.get()
+		apiClient.api.v1.stun.rtcConfiguration.get()
 			.then((response) => {
 				setRtcConfiguration(response as RTCConfiguration);
 				setStatus("rtc-connection-loaded");
@@ -54,6 +54,12 @@ export default function ControlTest() {
 		
 		return () => {};
 	}, [connected, hubConnection]);
+
+	useEffect(() => {
+		if (!rtcPeerConnection) { return; }
+
+		return () => {};
+	}, [rtcPeerConnection]);
 
 	useEffect(() => {
 		if (!connected || !hubConnection) { return; }

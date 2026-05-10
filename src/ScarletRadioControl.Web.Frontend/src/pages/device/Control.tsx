@@ -1,5 +1,5 @@
 import { HubConnectionState } from "@microsoft/signalr";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
@@ -29,7 +29,7 @@ export default function Control() {
 	useEffect(() => {
 		if (!apiClient) { return; }
 
-		apiClient!.api.v1.stun.rtcConfiguration.get()
+		apiClient.api.v1.stun.rtcConfiguration.get()
 			.then((response) => {
 				setRtcConfiguration(response as RTCConfiguration);
 				setStatus("rtc-connection-loaded");
@@ -52,6 +52,12 @@ export default function Control() {
 		
 		return () => {};
 	}, [connected, hubConnection]);
+
+	useEffect(() => {
+		if (!rtcPeerConnection) { return; }
+
+		return () => {};
+	}, [rtcPeerConnection]);
 
 	useEffect(() => {
 		if (!connected || !hubConnection) { return; }
