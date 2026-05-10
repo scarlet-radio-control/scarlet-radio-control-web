@@ -1,5 +1,4 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import useApiClient from "../../hooks/useApiClient";
 import useRtcPeerConnection from "../../hooks/useRtcPeerConnection";
@@ -117,9 +116,7 @@ export default function Control() {
 			const localCandidate = rtcPeerConnectionIceEvent.candidate;
 			const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
 
-			if (!localCandidate || !remotePeerConnectionId) {
-				return;
-			}
+			if (!localCandidate || !remotePeerConnectionId) { return; }
 
 			await hubConnection.invoke("SendIceCandidate", deviceId, remotePeerConnectionId, localCandidate.toJSON());
 		};

@@ -1,4 +1,3 @@
-import { HubConnectionState } from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import countdown from "../../assets/countdown.mp4";
@@ -99,10 +98,25 @@ export default function ControlTest() {
 	}, [connected, hubConnection, rtcPeerConnection]);
 
 	useEffect(() => {
-		if (!rtcPeerConnection) { return; }
+		if (!connected || !hubConnection || !rtcPeerConnection) { return; }
+
+		rtcPeerConnection.onconnectionstatechange = () => {
+			if (rtcPeerConnection.connectionState !== "connected") { return; }
+
+			setStatus("connected");
+		};
+
+		rtcPeerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
+			const localCandidate = rtcPeerConnectionIceEvent.candidate;
+			const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
+
+			if (!localCandidate || !remotePeerConnectionId) { return; }
+
+			await hubConnection.invoke("SendIceCandidate", deviceId, remotePeerConnectionId, localCandidate.toJSON());
+		};
 
 		return () => {};
-	}, [rtcPeerConnection]);
+	}, [connected, hubConnection, rtcPeerConnection]);
 
 	useEffect(() => {
 		if (!connected || !hubConnection) { return; }
@@ -135,33 +149,6 @@ export default function ControlTest() {
 		const startHubConnection = async () => {
 			await ensureLocalTracks();
 			setStatus("connecting");
-
-			rtcPeerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
-				const localCandidate = rtcPeerConnectionIceEvent.candidate;
-				const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
-
-				if (
-					!localCandidate ||
-					!hubConnection ||
-					hubConnection.state !== HubConnectionState.Connected ||
-					!remotePeerConnectionId
-				) {
-					return;
-				}
-
-				await hubConnection.invoke(
-					"SendIceCandidate",
-					deviceId,
-					remotePeerConnectionId,
-					localCandidate.toJSON()
-				);
-			};
-
-			rtcPeerConnection.onconnectionstatechange = () => {
-				if (!disposed && rtcPeerConnection.connectionState === "connected") {
-					setStatus("connected");
-				}
-			};
 
 			await hubConnection.invoke("JoinAsDevice", deviceId);
 
