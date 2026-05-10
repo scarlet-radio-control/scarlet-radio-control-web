@@ -45,15 +45,58 @@ export default function ControlTest() {
 	}, [apiClient]);
 
 	useEffect(() => {
-		if (!connected || !hubConnection) { return; }
+		if (!connected || !hubConnection || !rtcPeerConnection) { return; }
 
 		hubConnection.on("ClientJoined", async (connectionId: string) => {
-			console.log(`Client joined with connection id ${connectionId}`);
+			if (remotePeerConnectionIdRefObject.current === connectionId) {
+				return;
+			}
+
+			remotePeerConnectionIdRefObject.current = connectionId;
+
+			const rtcOffer = await rtcPeerConnection.createOffer();
+			await rtcPeerConnection.setLocalDescription(rtcOffer);
+			await hubConnection.invoke("SendOffer", deviceId, connectionId, rtcOffer);
+			setStatus("offer-sent");
 		});
+
+		hubConnection.on("ReceiveAnswer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
+			const flushPendingIceCandidates = async () => {
+				if (!rtcPeerConnection.remoteDescription) {
+					return;
+				}
+
+				const queuedCandidates = rtcIceCandidateInitsRefObject.current;
+				rtcIceCandidateInitsRefObject.current = [];
+
+				for (const queuedCandidate of queuedCandidates) {
+					await rtcPeerConnection.addIceCandidate(queuedCandidate);
+				}
+			};
+
+			remotePeerConnectionIdRefObject.current ??= connectionId;
+
+			await rtcPeerConnection.setRemoteDescription(rtcSessionDescriptionInit);
+			await flushPendingIceCandidates();
+
+			setStatus("connected");
+		});
+
+		hubConnection.on("ReceiveIceCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
+			remotePeerConnectionIdRefObject.current ??= connectionId;
+
+			if (rtcPeerConnection.remoteDescription) {
+				await rtcPeerConnection.addIceCandidate(rtcIceCandidateInit);
+				return;
+			}
+
+			rtcIceCandidateInitsRefObject.current.push(rtcIceCandidateInit);
+		});
+
 		setStatus("signal-r-loaded");
 		
 		return () => {};
-	}, [connected, hubConnection]);
+	}, [connected, hubConnection, rtcPeerConnection]);
 
 	useEffect(() => {
 		if (!rtcPeerConnection) { return; }
@@ -89,19 +132,6 @@ export default function ControlTest() {
 			tracksAddedRefObject.current = true;
 		};
 
-		const flushPendingIceCandidates = async () => {
-			if (!rtcPeerConnection.remoteDescription) {
-				return;
-			}
-
-			const queuedCandidates = rtcIceCandidateInitsRefObject.current;
-			rtcIceCandidateInitsRefObject.current = [];
-
-			for (const queuedCandidate of queuedCandidates) {
-				await rtcPeerConnection.addIceCandidate(queuedCandidate);
-			}
-		};
-
 		const startHubConnection = async () => {
 			await ensureLocalTracks();
 			setStatus("connecting");
@@ -132,46 +162,6 @@ export default function ControlTest() {
 					setStatus("connected");
 				}
 			};
-
-			hubConnection.on("ClientJoined", async (connectionId: string) => {
-				if (remotePeerConnectionIdRefObject.current === connectionId) {
-					return;
-				}
-
-				remotePeerConnectionIdRefObject.current = connectionId;
-
-				const rtcOffer = await rtcPeerConnection.createOffer();
-				await rtcPeerConnection.setLocalDescription(rtcOffer);
-				await hubConnection.invoke("SendOffer", deviceId, connectionId, rtcOffer);
-
-				if (!disposed) {
-					setStatus("offer-sent");
-				}
-			});
-
-			hubConnection.on("ReceiveAnswer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
-					remotePeerConnectionIdRefObject.current ??= connectionId;
-
-					await rtcPeerConnection.setRemoteDescription(rtcSessionDescriptionInit);
-					await flushPendingIceCandidates();
-
-					if (!disposed) {
-						setStatus("connected");
-					}
-				}
-			);
-
-			hubConnection.on("ReceiveIceCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
-					remotePeerConnectionIdRefObject.current ??= connectionId;
-
-					if (rtcPeerConnection.remoteDescription) {
-						await rtcPeerConnection.addIceCandidate(rtcIceCandidateInit);
-						return;
-					}
-
-					rtcIceCandidateInitsRefObject.current.push(rtcIceCandidateInit);
-				}
-			);
 
 			await hubConnection.invoke("JoinAsDevice", deviceId);
 

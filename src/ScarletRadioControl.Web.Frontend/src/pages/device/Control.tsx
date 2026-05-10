@@ -43,15 +43,53 @@ export default function Control() {
 	}, [apiClient]);
 
 	useEffect(() => {
-		if (!connected || !hubConnection) { return; }
+		if (!connected || !hubConnection || !rtcPeerConnection) { return; }
 
 		hubConnection.on("DeviceJoined", async (connectionId: string) => {
 			console.log(`Device joined with connection id ${connectionId}`);
 		});
+
+		hubConnection.on("ReceiveIceCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
+			remotePeerConnectionIdRefObject.current ??= connectionId;
+
+			if (rtcPeerConnection.remoteDescription) {
+				await rtcPeerConnection.addIceCandidate(rtcIceCandidateInit);
+				return;
+			}
+
+			rtcIceCandidateInitsRefObject.current.push(rtcIceCandidateInit);
+		});
+
+		hubConnection.on("ReceiveOffer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
+			const flushPendingIceCandidates = async () => {
+				if (!rtcPeerConnection.remoteDescription) {
+					return;
+				}
+
+				const queuedCandidates = rtcIceCandidateInitsRefObject.current;
+				rtcIceCandidateInitsRefObject.current = [];
+
+				for (const queuedCandidate of queuedCandidates) {
+					await rtcPeerConnection.addIceCandidate(queuedCandidate);
+				}
+			};
+
+			remotePeerConnectionIdRefObject.current = connectionId;
+
+			await rtcPeerConnection.setRemoteDescription(rtcSessionDescriptionInit);
+
+			const rtcAnswer = await rtcPeerConnection.createAnswer();
+			await rtcPeerConnection.setLocalDescription(rtcAnswer);
+
+			await hubConnection.invoke("SendAnswer", deviceId, connectionId, rtcAnswer);
+			await flushPendingIceCandidates();
+			setStatus("answer-sent");
+		});
+
 		setStatus("signal-r-loaded");
 		
 		return () => {};
-	}, [connected, hubConnection]);
+	}, [connected, hubConnection, rtcPeerConnection]);
 
 	useEffect(() => {
 		if (!rtcPeerConnection) { return; }
@@ -67,19 +105,6 @@ export default function Control() {
 		}
 
 		let disposed = false;
-
-		const flushPendingIceCandidates = async () => {
-			if (!rtcPeerConnection.remoteDescription) {
-				return;
-			}
-
-			const queuedCandidates = rtcIceCandidateInitsRefObject.current;
-			rtcIceCandidateInitsRefObject.current = [];
-
-			for (const queuedCandidate of queuedCandidates) {
-				await rtcPeerConnection.addIceCandidate(queuedCandidate);
-			}
-		};
 
 		const startHubConnection = async () => {
 			setStatus("connecting");
@@ -114,35 +139,6 @@ export default function Control() {
 					});
 				}
 			};
-
-			hubConnection.on("ReceiveOffer", async (connectionId: string, rtcSessionDescriptionInit: RTCSessionDescriptionInit) => {
-					remotePeerConnectionIdRefObject.current = connectionId;
-
-					await rtcPeerConnection.setRemoteDescription(rtcSessionDescriptionInit);
-
-					const rtcAnswer = await rtcPeerConnection.createAnswer();
-					await rtcPeerConnection.setLocalDescription(rtcAnswer);
-
-					await hubConnection!.invoke("SendAnswer", deviceId, connectionId, rtcAnswer);
-					await flushPendingIceCandidates();
-
-					if (!disposed) {
-						setStatus("answer-sent");
-					}
-				}
-			);
-
-			hubConnection.on("ReceiveIceCandidate", async (connectionId: string, rtcIceCandidateInit: RTCIceCandidateInit) => {
-					remotePeerConnectionIdRefObject.current ??= connectionId;
-
-					if (rtcPeerConnection.remoteDescription) {
-						await rtcPeerConnection.addIceCandidate(rtcIceCandidateInit);
-						return;
-					}
-
-					rtcIceCandidateInitsRefObject.current.push(rtcIceCandidateInit);
-				}
-			);
 
 			rtcPeerConnection.onconnectionstatechange = () => {
 				if (!disposed && rtcPeerConnection.connectionState === "connected") {
