@@ -92,10 +92,53 @@ export default function Control() {
 	}, [connected, hubConnection, rtcPeerConnection]);
 
 	useEffect(() => {
-		if (!rtcPeerConnection) { return; }
+		if (!connected || !hubConnection || !rtcPeerConnection) { return; }
+
+		rtcPeerConnection.onconnectionstatechange = () => {
+			if (rtcPeerConnection.connectionState !== "connected") { return; }
+
+			rtcPeerConnection.getStats()
+				.then((x)=> { 
+					x.forEach((report) => {
+						if (report.type === "transport" && report.selectedCandidatePairId !== null){
+							const selectedPair = x.get(report.selectedCandidatePairId);
+							const local = x.get(selectedPair.localCandidateId);
+							const remote = x.get(selectedPair.remoteCandidateId);
+							setRtcWellKnownStats({ localCandidateType: local.candidateType, remoteCandidateType: remote.candidateType });
+						}
+						console.log(report)
+					});
+				});
+
+			setStatus("connected");
+		};
+
+		rtcPeerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
+			const localCandidate = rtcPeerConnectionIceEvent.candidate;
+			const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
+
+			if (!localCandidate || !remotePeerConnectionId) {
+				return;
+			}
+
+			await hubConnection.invoke("SendIceCandidate", deviceId, remotePeerConnectionId, localCandidate.toJSON());
+		};
+
+		rtcPeerConnection.ontrack = (rtcPeerConnectionTrackEvent) => {
+			const htmlVideoElement = htmlVideoElementRefObject.current;
+			const mediaStream = rtcPeerConnectionTrackEvent.streams[0];
+
+			if (!htmlVideoElement || !mediaStream) { return; }
+
+			htmlVideoElement.srcObject = mediaStream;
+			htmlVideoElement.play()
+				.catch((reason) => {
+					console.error(reason);
+				});
+		};
 
 		return () => {};
-	}, [rtcPeerConnection]);
+	}, [connected, hubConnection, rtcPeerConnection]);
 
 	useEffect(() => {
 		if (!connected || !hubConnection) { return; }
@@ -108,59 +151,6 @@ export default function Control() {
 
 		const startHubConnection = async () => {
 			setStatus("connecting");
-
-			rtcPeerConnection.onicecandidate = async (rtcPeerConnectionIceEvent) => {
-				const localCandidate = rtcPeerConnectionIceEvent.candidate;
-				const remotePeerConnectionId = remotePeerConnectionIdRefObject.current;
-
-				if (
-					!localCandidate ||
-					!hubConnection ||
-					hubConnection.state !== HubConnectionState.Connected ||
-					!remotePeerConnectionId
-				) {
-					return;
-				}
-
-				await hubConnection.invoke(
-					"SendIceCandidate",
-					deviceId,
-					remotePeerConnectionId,
-					localCandidate.toJSON()
-				);
-			};
-
-			rtcPeerConnection.ontrack = (rtcPeerConnectionTrackEvent) => {
-				const mediaStream = rtcPeerConnectionTrackEvent.streams[0];
-				if (htmlVideoElementRefObject.current && mediaStream) {
-					htmlVideoElementRefObject.current.srcObject = mediaStream;
-					void htmlVideoElementRefObject.current.play().catch((reason) => {
-						console.error("Failed to autoplay remote stream", reason);
-					});
-				}
-			};
-
-			rtcPeerConnection.onconnectionstatechange = () => {
-				if (!disposed && rtcPeerConnection.connectionState === "connected") {
-					setStatus("connected");
-					rtcPeerConnection.getStats()
-						.then((x)=> { 
-							x.forEach((report) => {
-								if (report.type === "transport" && report.selectedCandidatePairId !== null){
-									const selectedPair =x.get(report.selectedCandidatePairId);
-
-									const local = x.get(selectedPair.localCandidateId);
-  									const remote = x.get(selectedPair.remoteCandidateId);
-									setRtcWellKnownStats({
-										localCandidateType: local.candidateType,
-										remoteCandidateType: remote.candidateType,
-									});
-								}
-								console.log(report)
-							});
-						});
-				}
-			};
 
 			await hubConnection.invoke("JoinAsClient", deviceId);
 
