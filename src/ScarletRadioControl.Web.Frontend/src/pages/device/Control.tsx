@@ -42,7 +42,7 @@ export default function Control() {
 	}, [apiClient]);
 
 	useEffect(() => {
-		if (!connected || !hubConnection || !rtcPeerConnection) { return; }
+		if (!connected || !deviceId || !hubConnection || !rtcPeerConnection) { return; }
 
 		hubConnection.on("DeviceJoined", async (connectionId: string) => {
 			console.log(`Device joined with connection id ${connectionId}`);
@@ -88,10 +88,10 @@ export default function Control() {
 		setStatus("hub-connection-or-rtc-peer-connection-loaded");
 		
 		return () => {};
-	}, [connected, hubConnection, rtcPeerConnection]);
+	}, [connected, deviceId, hubConnection, rtcPeerConnection]);
 
 	useEffect(() => {
-		if (!connected || !hubConnection || !rtcPeerConnection) { return; }
+		if (!connected || !deviceId || !hubConnection || !rtcPeerConnection) { return; }
 
 		rtcPeerConnection.onconnectionstatechange = () => {
 			if (rtcPeerConnection.connectionState !== "connected") { return; }
@@ -137,10 +137,10 @@ export default function Control() {
 		setStatus("hub-connection-or-rtc-peer-connection-loaded");
 
 		return () => {};
-	}, [connected, hubConnection, rtcPeerConnection]);
+	}, [connected, deviceId, hubConnection, rtcPeerConnection]);
 
 	useEffect(() => {
-		if (!connected || !hubConnection || !rtcPeerConnection) { return; }
+		if (!connected || !deviceId || !hubConnection || !rtcPeerConnection) { return; }
 
 		if (rtcPeerConnection.connectionState !== "new") { return; }
 
@@ -151,7 +151,7 @@ export default function Control() {
 			});
 
 		return () => { };
-	}, [connected, hubConnection, rtcPeerConnection]);
+	}, [connected, deviceId, hubConnection, rtcPeerConnection]);
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>

@@ -10,7 +10,7 @@ interface RTCWellKnownStats {
 	remoteCandidateType?: string;
 }
 
-type Status = "unknown" | "rtc-connection-loaded" |"signal-r-loaded" | "loading" | "ready" | "connecting" | "waiting-for-receiver" | "offer-sent" | "connected" | "error";
+type Status = "unknown" | "rtc-connection-loaded" | "hub-connection-or-rtc-peer-connection-loaded" | "offer-sent" | "connected" | "error";
 
 export default function ControlTest() {
 	const apiClient = useApiClient();
@@ -44,7 +44,7 @@ export default function ControlTest() {
 	}, [apiClient]);
 
 	useEffect(() => {
-		if (!connected || !hubConnection || !rtcPeerConnection) { return; }
+		if (!connected || !deviceId || !hubConnection || !rtcPeerConnection) { return; }
 
 		hubConnection.on("ClientJoined", async (connectionId: string) => {
 			if (remotePeerConnectionIdRefObject.current === connectionId) {
@@ -92,13 +92,13 @@ export default function ControlTest() {
 			rtcIceCandidateInitsRefObject.current.push(rtcIceCandidateInit);
 		});
 
-		setStatus("signal-r-loaded");
+		setStatus("hub-connection-or-rtc-peer-connection-loaded");
 		
 		return () => {};
-	}, [connected, hubConnection, rtcPeerConnection]);
+	}, [connected, deviceId, hubConnection, rtcPeerConnection]);
 
 	useEffect(() => {
-		if (!connected || !hubConnection || !rtcPeerConnection) { return; }
+		if (!connected || !deviceId || !hubConnection || !rtcPeerConnection) { return; }
 
 		rtcPeerConnection.onconnectionstatechange = () => {
 			if (rtcPeerConnection.connectionState !== "connected") { return; }
@@ -129,17 +129,12 @@ export default function ControlTest() {
 		};
 
 		return () => {};
-	}, [connected, hubConnection, rtcPeerConnection]);
+	}, [connected, deviceId, hubConnection, rtcPeerConnection]);
 
 	useEffect(() => {
-		if (!connected || !hubConnection) { return; }
-
-		if (!deviceId || !rtcConfiguration || !rtcPeerConnection || !htmlVideoElementRefObject.current) {
-			return;
-		}
-
-		let disposed = false;
 		const htmlVideoElement = htmlVideoElementRefObject.current;
+
+		if (!connected || !deviceId || !htmlVideoElement || !hubConnection || !rtcPeerConnection) { return; }
 
 		const ensureLocalTracks = async () => {
 			if (tracksAddedRefObject.current) {
@@ -159,56 +154,16 @@ export default function ControlTest() {
 			tracksAddedRefObject.current = true;
 		};
 
-		const startHubConnection = async () => {
-			await ensureLocalTracks();
-			setStatus("connecting");
+		ensureLocalTracks();
 
-			await hubConnection.invoke("JoinAsDevice", deviceId);
-
-			if (!disposed) {
-				setStatus("waiting-for-receiver");
-			}
-		};
-
-		if (htmlVideoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-			setStatus("ready");
-			startHubConnection().catch((reason) => {
+		hubConnection.invoke("JoinAsDevice", deviceId)
+			.catch((reason) => {
 				console.error(reason);
-				if (!disposed) {
-					setStatus("error");
-				}
+				setStatus("error");
 			});
-		} else {
-			const handleLoadedData = () => {
-				setStatus("ready");
-				startHubConnection().catch((reason) => {
-					console.error(reason);
-					if (!disposed) {
-						setStatus("error");
-					}
-				});
-			};
 
-			htmlVideoElement.addEventListener("loadeddata", handleLoadedData, { once: true });
-
-			return () => {
-				disposed = true;
-				htmlVideoElement.removeEventListener("loadeddata", handleLoadedData);
-			};
-		}
-
-		return () => {
-			disposed = true;
-			rtcIceCandidateInitsRefObject.current = [];
-			remotePeerConnectionIdRefObject.current = null;
-			tracksAddedRefObject.current = false;
-
-			try {
-				rtcPeerConnection.onicecandidate = null;
-				rtcPeerConnection.onconnectionstatechange = null;
-			} catch { }
-		};
-	}, [connected, deviceId, hubConnection, rtcConfiguration, rtcPeerConnection]);
+		return () => { };
+	}, [connected, deviceId, hubConnection, rtcPeerConnection]);
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
