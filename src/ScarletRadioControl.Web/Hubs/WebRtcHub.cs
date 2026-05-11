@@ -44,9 +44,9 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 	{
 		Task ClientJoined(string connectionId);
 
-		Task DeviceJoined(string connectionId);
-
 		Task DeviceHearbeated(string fromConnectionId);
+
+		Task DeviceJoined(string connectionId);
 
 		Task ReceiveOffer(string fromConnectionId, object rtcSessionDescriptionInit);
 
