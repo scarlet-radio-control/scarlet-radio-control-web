@@ -3,12 +3,12 @@ import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 
 interface SignalRContextValue {
 	connected: boolean;
-	hubConnection: HubConnection | null;
+	hubConnection: HubConnection | undefined;
 }
 
 export const SignalRContext = createContext<SignalRContextValue>({
 	connected: false,
-	hubConnection: null,
+	hubConnection: undefined,
 });
 
 export const useSignalRContext = () => useContext(SignalRContext);
@@ -19,7 +19,7 @@ interface SignalRProviderProps {
 
 export const SignalRProvider = ({ children }: SignalRProviderProps) => {
 	const [connected, setConnected] = useState(false);
-	const [hubConnection, setHubConnection] = useState<HubConnection | null>(null);
+	const [hubConnection, setHubConnection] = useState<HubConnection | undefined>(undefined);
 
 	useEffect(() => {
 		let disposed = false;
