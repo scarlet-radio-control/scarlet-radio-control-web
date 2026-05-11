@@ -44,6 +44,10 @@ export default function Control() {
 	useEffect(() => {
 		if (!connected || !deviceId || !hubConnection || !rtcPeerConnection) { return; }
 
+		hubConnection.on("DeviceHearbeated", async (connectionId: string) => {
+			console.log(`Heartbeat received from ${connectionId}`);
+		});
+
 		hubConnection.on("DeviceJoined", async (connectionId: string) => {
 			console.log(`Device joined with connection id ${connectionId}`);
 		});
