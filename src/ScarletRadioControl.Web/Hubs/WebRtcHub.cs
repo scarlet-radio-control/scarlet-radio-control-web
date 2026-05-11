@@ -8,11 +8,11 @@ namespace ScarletRadioControl.Web.Hubs;
 public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 {
 
-	private static readonly ConcurrentDictionary<string, DateTimeOffset> lastHeartbeat = new ConcurrentDictionary<string, DateTimeOffset>();
+	public static ConcurrentDictionary<string, DateTimeOffset> LastHeartbeat { get; } = new ConcurrentDictionary<string, DateTimeOffset>();
 
 	public async Task DeviceHeartbeat(string deviceId)
 	{
-		WebRtcHub.lastHeartbeat[deviceId] = DateTimeOffset.UtcNow;
+		WebRtcHub.LastHeartbeat[deviceId] = DateTimeOffset.UtcNow;
 	}
 
 	public async Task JoinAsClient(string deviceId)
