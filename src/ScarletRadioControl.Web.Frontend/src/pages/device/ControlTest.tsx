@@ -165,6 +165,18 @@ export default function ControlTest() {
 		return () => { };
 	}, [connected, deviceId, hubConnection, rtcPeerConnection]);
 
+	useEffect(() => {
+		if (!connected || !deviceId || !hubConnection) { return; }
+
+		const interval = setInterval(() => {
+			hubConnection.invoke("DeviceHeartbeat", deviceId);
+		}, 1000);
+
+		return () => {
+			clearInterval(interval);
+		};
+	}, [connected, deviceId, hubConnection]);
+
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
 			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Local Candidate Type: {rtcWellKnownStats?.localCandidateType} - Remote Candidate Type: {rtcWellKnownStats?.remoteCandidateType}</p>

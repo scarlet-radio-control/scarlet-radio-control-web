@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 
@@ -5,6 +7,13 @@ namespace ScarletRadioControl.Web.Hubs;
 
 public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 {
+
+	private static readonly ConcurrentDictionary<string, DateTimeOffset> lastHeartbeat = new ConcurrentDictionary<string, DateTimeOffset>();
+
+	public async Task DeviceHeartbeat(string deviceId)
+	{
+		WebRtcHub.lastHeartbeat[deviceId] = DateTimeOffset.UtcNow;
+	}
 
 	public async Task JoinAsClient(string deviceId)
 	{
