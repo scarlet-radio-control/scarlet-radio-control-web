@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 
@@ -5,6 +7,11 @@ namespace ScarletRadioControl.Web.Hubs;
 
 public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 {
+
+	public async Task DeviceHeartbeat(string deviceId)
+	{
+		await this.Clients.OthersInGroup(deviceId).DeviceHearbeated(this.Context.ConnectionId);
+	}
 
 	public async Task JoinAsClient(string deviceId)
 	{
@@ -38,6 +45,8 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 		Task ClientJoined(string connectionId);
 
 		Task DeviceJoined(string connectionId);
+
+		Task DeviceHearbeated(string fromConnectionId);
 
 		Task ReceiveOffer(string fromConnectionId, object rtcSessionDescriptionInit);
 
