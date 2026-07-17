@@ -66,7 +66,7 @@ export function deserializeIntoRTCConfiguration(rTCConfiguration: Partial<RTCCon
 export function deserializeIntoRTCIceServer(rTCIceServer: Partial<RTCIceServer> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
         "credential": n => { rTCIceServer.credential = n.getStringValue(); },
-        "urls": n => { rTCIceServer.urls = n.getCollectionOfPrimitiveValues<string>(); },
+        "urls": n => { rTCIceServer.urls = n.getCollectionOfPrimitiveValues<string>("string"); },
         "username": n => { rTCIceServer.username = n.getStringValue(); },
     }
 }

@@ -5,7 +5,7 @@
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 		<LangVersion>13</LangVersion>
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-		<NoWarn>CS0612</NoWarn>
+		<NoWarn>CS0612;NU1903</NoWarn>
 		<Nullable>annotations</Nullable>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<RepositoryType>git</RepositoryType>
