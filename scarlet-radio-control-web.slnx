@@ -1,7 +1,4 @@
 <Solution>
-  <Folder Name="/.config/">
-    <File Path=".config/dotnet-tools.json" />
-  </Folder>
   <Folder Name="/.github/">
     <File Path=".github/dependabot.yml" />
   </Folder>
