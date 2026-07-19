@@ -26,8 +26,6 @@ export default function Control() {
 	const rtcPeerConnection = useRtcPeerConnection(rtcConfiguration);
 
 	useEffect(() => {
-		if (!apiClient) { return; }
-
 		apiClient.api.v1.stun.rtcConfiguration.get()
 			.then((response) => {
 				setRtcConfiguration(response as RTCConfiguration);
