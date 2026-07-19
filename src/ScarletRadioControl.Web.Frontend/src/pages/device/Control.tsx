@@ -16,6 +16,8 @@ export default function Control() {
 	const { deviceId } = useParams<{ deviceId: string }>();
 	const { connected, hubConnection }= useSignalRContext();
 
+	const [rtcConfigurationStatus, setRtcConfigurationStatus] = useState<"disconnected" | "connected">("disconnected");
+
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | undefined>(undefined);
 	const [status, setStatus] = useState<Status>("unknown");
 	const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | undefined>(undefined);
@@ -29,11 +31,11 @@ export default function Control() {
 		apiClient.api.v1.stun.rtcConfiguration.get()
 			.then((response) => {
 				setRtcConfiguration(response as RTCConfiguration);
-				setStatus("rtc-connection-loaded");
+				setRtcConfigurationStatus("connected");
 			}
 		).catch((reason) => {
-			console.error(reason); 
-			setStatus("error"); 
+			console.error(reason);
+			setRtcConfigurationStatus("disconnected");
 		});
 
 		return () => {};
@@ -157,7 +159,7 @@ export default function Control() {
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
-			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Local Candidate Type: {rtcWellKnownStats?.localCandidateType} - Remote Candidate Type: {rtcWellKnownStats?.remoteCandidateType}</p>
+			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Rtc Configuration: {rtcConfigurationStatus} - Local Candidate Type: {rtcWellKnownStats?.localCandidateType} - Remote Candidate Type: {rtcWellKnownStats?.remoteCandidateType}</p>
 			<video
 				autoPlay
 				muted

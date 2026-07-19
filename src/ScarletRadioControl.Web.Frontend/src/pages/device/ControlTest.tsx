@@ -18,6 +18,7 @@ export default function ControlTest() {
 	const {connected, hubConnection}= useSignalRContext();
 
 	const [heartbeatStatus, setHeartbeatStatus] = useState<"disconnected" | "connected">("disconnected");
+	const [rtcConfigurationStatus, setRtcConfigurationStatus] = useState<"disconnected" | "connected">("disconnected");
 
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | undefined>(undefined);
 	const [status, setStatus] = useState<Status>("unknown");
@@ -48,11 +49,11 @@ export default function ControlTest() {
 		apiClient.api.v1.stun.rtcConfiguration.get()
 			.then((response) => {
 				setRtcConfiguration(response as RTCConfiguration);
-				setStatus("rtc-connection-loaded");
+				setRtcConfigurationStatus("connected");
 			}
 		).catch((reason) => {
 			console.error(reason);
-			setStatus("error");
+			setRtcConfigurationStatus("disconnected");
 		});
 
 		return () => {};
@@ -182,7 +183,7 @@ export default function ControlTest() {
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
-			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Heartbeat: {heartbeatStatus} - Local Candidate Type: {rtcWellKnownStats?.localCandidateType} - Remote Candidate Type: {rtcWellKnownStats?.remoteCandidateType}</p>
+			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Heartbeat: {heartbeatStatus} - Rtc Configuration: {rtcConfigurationStatus} - Local Candidate Type: {rtcWellKnownStats?.localCandidateType} - Remote Candidate Type: {rtcWellKnownStats?.remoteCandidateType}</p>
 			<video
 				autoPlay
 				loop
