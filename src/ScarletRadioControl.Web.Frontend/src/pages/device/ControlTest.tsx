@@ -46,7 +46,7 @@ export default function ControlTest() {
 	}, [connected, deviceId, hubConnection]);
 
 	useEffect(() => {
-		apiClient.api.v1.stun.rtcConfiguration.get()
+		apiClient.api.v1.webRtc.rtcConfiguration.get()
 			.then((response) => {
 				setRtcConfiguration(response as RTCConfiguration);
 				setRtcConfigurationStatus("connected");

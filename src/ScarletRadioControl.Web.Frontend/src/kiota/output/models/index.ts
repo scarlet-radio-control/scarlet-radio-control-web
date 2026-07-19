@@ -7,6 +7,15 @@ import { type AdditionalDataHolder, type ApiError, type Parsable, type ParseNode
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {Device}
+ */
+// @ts-ignore
+export function createDeviceFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoDevice;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {ProblemDetails}
  */
 // @ts-ignore
@@ -30,6 +39,18 @@ export function createRTCConfigurationFromDiscriminatorValue(parseNode: ParseNod
 // @ts-ignore
 export function createRTCIceServerFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoRTCIceServer;
+}
+/**
+ * The deserialization information for the current model
+ * @param Device The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoDevice(device: Partial<Device> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "id": n => { device.id = n.getStringValue(); },
+        "name": n => { device.name = n.getStringValue(); },
+    }
 }
 /**
  * The deserialization information for the current model
@@ -69,6 +90,16 @@ export function deserializeIntoRTCIceServer(rTCIceServer: Partial<RTCIceServer> 
         "urls": n => { rTCIceServer.urls = n.getCollectionOfPrimitiveValues<string>("string"); },
         "username": n => { rTCIceServer.username = n.getStringValue(); },
     }
+}
+export interface Device extends AdditionalDataHolder, Parsable {
+    /**
+     * The id property
+     */
+    id?: string | null;
+    /**
+     * The name property
+     */
+    name?: string | null;
 }
 export interface ProblemDetails extends AdditionalDataHolder, ApiError, Parsable {
     /**
@@ -111,6 +142,19 @@ export interface RTCIceServer extends AdditionalDataHolder, Parsable {
      * The username property
      */
     username?: string | null;
+}
+/**
+ * Serializes information the current object
+ * @param Device The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeDevice(writer: SerializationWriter, device: Partial<Device> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!device || isSerializingDerivedType) { return; }
+    writer.writeStringValue("id", device.id);
+    writer.writeStringValue("name", device.name);
+    writer.writeAdditionalData(device.additionalData);
 }
 /**
  * Serializes information the current object

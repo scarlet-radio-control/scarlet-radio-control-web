@@ -8,7 +8,7 @@ namespace ScarletRadioControl.Web.Controllers.API.V1;
 
 [ApiController]
 [ApiExplorerSettings(GroupName = "v1")]
-[Route("/api/v1/stun")]
+[Route("/api/v1/web-rtc")]
 public class WebRtcController : ControllerBase
 {
 
