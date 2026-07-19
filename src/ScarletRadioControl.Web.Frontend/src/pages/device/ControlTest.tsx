@@ -45,20 +45,18 @@ export default function ControlTest() {
 	}, [connected, deviceId, hubConnection]);
 
 	useEffect(() => {
-		if (!apiClient) { return; }
-
 		apiClient.api.v1.stun.rtcConfiguration.get()
 			.then((response) => {
 				setRtcConfiguration(response as RTCConfiguration);
 				setStatus("rtc-connection-loaded");
 			}
 		).catch((reason) => {
-			console.error(reason); 
-			setStatus("error"); 
+			console.error(reason);
+			setStatus("error");
 		});
 
 		return () => {};
-	}, [apiClient, heartbeatStatus]);
+	}, [apiClient]);
 
 	useEffect(() => {
 		if (!connected || !deviceId || !hubConnection || !rtcPeerConnection) { return; }
@@ -184,7 +182,7 @@ export default function ControlTest() {
 
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
-			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Local Candidate Type: {rtcWellKnownStats?.localCandidateType} - Remote Candidate Type: {rtcWellKnownStats?.remoteCandidateType}</p>
+			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Heartbeat: {heartbeatStatus} - Local Candidate Type: {rtcWellKnownStats?.localCandidateType} - Remote Candidate Type: {rtcWellKnownStats?.remoteCandidateType}</p>
 			<video
 				autoPlay
 				loop
