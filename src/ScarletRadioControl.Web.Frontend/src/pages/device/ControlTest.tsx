@@ -58,7 +58,7 @@ export default function ControlTest() {
 		});
 
 		return () => {};
-	}, [apiClient]);
+	}, [apiClient, heartbeatStatus]);
 
 	useEffect(() => {
 		if (!connected || !deviceId || !hubConnection || !rtcPeerConnection) { return; }
