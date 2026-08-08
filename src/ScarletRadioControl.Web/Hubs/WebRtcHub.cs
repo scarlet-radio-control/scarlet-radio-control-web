@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 
@@ -10,7 +8,7 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 
 	public async Task DeviceHeartbeat(string deviceId)
 	{
-		await this.Clients.OthersInGroup(deviceId).DeviceHearbeated(this.Context.ConnectionId);
+		await this.Clients.OthersInGroup(deviceId).DeviceHeartbeated(this.Context.ConnectionId);
 	}
 
 	public async Task JoinAsClient(string deviceId)
@@ -44,7 +42,7 @@ public class WebRtcHub : Hub<WebRtcHub.IWebRtcClient>
 	{
 		Task ClientJoined(string connectionId);
 
-		Task DeviceHearbeated(string fromConnectionId);
+		Task DeviceHeartbeated(string fromConnectionId);
 
 		Task DeviceJoined(string connectionId);
 

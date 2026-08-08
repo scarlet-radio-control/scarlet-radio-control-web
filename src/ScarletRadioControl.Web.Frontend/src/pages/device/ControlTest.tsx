@@ -17,6 +17,9 @@ export default function ControlTest() {
 	const { deviceId } = useParams<{ deviceId: string }>();
 	const {connected, hubConnection}= useSignalRContext();
 
+	const [heartbeatStatus, setHeartbeatStatus] = useState<"disconnected" | "connected">("disconnected");
+	const [rtcConfigurationStatus, setRtcConfigurationStatus] = useState<"disconnected" | "connected">("disconnected");
+
 	const [rtcConfiguration, setRtcConfiguration] = useState<RTCConfiguration | undefined>(undefined);
 	const [status, setStatus] = useState<Status>("unknown");
 	const [rtcWellKnownStats, setRtcWellKnownStats] = useState<RTCWellKnownStats | undefined>(undefined);
@@ -28,16 +31,29 @@ export default function ControlTest() {
 	const rtcPeerConnection = useRtcPeerConnection(rtcConfiguration);
 
 	useEffect(() => {
-		if (!apiClient) { return; }
+		if (!connected || !deviceId || !hubConnection) { return; }
 
-		apiClient.api.v1.stun.rtcConfiguration.get()
+		const interval = setInterval(() => {
+			hubConnection.invoke("DeviceHeartbeat", deviceId)
+				.then(() => setHeartbeatStatus("connected"))
+				.catch(() => setHeartbeatStatus("disconnected"));
+		}, 1000);
+
+		return () => {
+			clearInterval(interval);
+			setHeartbeatStatus("disconnected");
+		};
+	}, [connected, deviceId, hubConnection]);
+
+	useEffect(() => {
+		apiClient.api.v1.webRtc.rtcConfiguration.get()
 			.then((response) => {
 				setRtcConfiguration(response as RTCConfiguration);
-				setStatus("rtc-connection-loaded");
+				setRtcConfigurationStatus("connected");
 			}
 		).catch((reason) => {
-			console.error(reason); 
-			setStatus("error"); 
+			console.error(reason);
+			setRtcConfigurationStatus("disconnected");
 		});
 
 		return () => {};
@@ -165,21 +181,9 @@ export default function ControlTest() {
 		return () => { };
 	}, [connected, deviceId, hubConnection, rtcPeerConnection]);
 
-	useEffect(() => {
-		if (!connected || !deviceId || !hubConnection) { return; }
-
-		const interval = setInterval(() => {
-			hubConnection.invoke("DeviceHeartbeat", deviceId);
-		}, 1000);
-
-		return () => {
-			clearInterval(interval);
-		};
-	}, [connected, deviceId, hubConnection]);
-
 	return (
 		<div style={{ display: "flex", flex: 1, flexDirection: "column", width: "100%" }}>
-			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Local Candidate Type: {rtcWellKnownStats?.localCandidateType} - Remote Candidate Type: {rtcWellKnownStats?.remoteCandidateType}</p>
+			<p style={{ margin: "auto 1rem" }}>Id: {deviceId} - Status: {status} - Heartbeat: {heartbeatStatus} - Rtc Configuration: {rtcConfigurationStatus} - Local Candidate Type: {rtcWellKnownStats?.localCandidateType} - Remote Candidate Type: {rtcWellKnownStats?.remoteCandidateType}</p>
 			<video
 				autoPlay
 				loop
